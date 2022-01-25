@@ -2,9 +2,7 @@ import os
 from config import ConfigRead 
 from vs_script import Resample
 from vs_script import Interpolate
-from re import findall
-from time import sleep
-import subprocess
+from subprocess import run
 
 Temp=os.environ["TEMP"]
 
@@ -32,24 +30,21 @@ def Render(VideoList, Option):
             os.remove(Output)
         # Variables
         if "ffmpeg.exe" in os.path.split(Settings[0])[1]:
-            Input=['-loglevel', 'error', '-hide_banner', '-stats', '-i', '-']
-            Pipe=['vspipe', '-y', Temp+'\\Render.vpy','-','|']
-            Output=[Output]
+            Options='-loglevel error -hide_banner -stats'
+            Input="-i -"
+            Pipe=f'vspipe -y {Temp}\\Render.vpy - | '
+            Output=Output
+            Arguments=Arguments.format(Options=Options,Input=Input,Output=Output)
+
         elif "av1an.exe" in os.path.split(Settings[0])[1]:
-            Input=['-i', f'{Temp}\\Render.vpy']
-            Pipe=[]
-            Output=['-o', Output]
-            print("Warning: av1an Support has been entirely added yet. So expect to encounter bugs.")
-            subprocess.run(['pause'],shell=True)
-            print("")
-  
-        if Arguments=="":
-            Arguments=[]
-        else:
-            Arguments=Settings[1].split(" ")    
-        Main=Pipe+[Settings[0]]+Input+Arguments+Output
+            Input=f'-i {Temp}\\Render.vpy'
+            Pipe=""
+            Output=f'-o {Output}'
+            Arguments=Arguments.format(Input=Input,Output=Output)  
+
+        Main=Pipe+Settings[0]+f' {Arguments}'
         print(f"Video: {Video}\n")      
-        subprocess.run(Main,shell=True) 
+        run(Main,shell=True) 
         print("")
 
         

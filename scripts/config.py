@@ -1,5 +1,5 @@
 import configparser
-import encoder
+from encoder import Settings 
 import os
 
 File=os.environ["APPDATA"]+"/Smoothie/Smoothie-Config.ini"
@@ -10,7 +10,7 @@ def ConfigExist():
 
 def ConfigCreate():
     SmoothieConfig = configparser.ConfigParser()
-    Arguments=encoder.Settings()
+    EncoderSettings= Settings()
     # Video
     SmoothieConfig['interpolation'] = {
     'fps': '480',
@@ -27,7 +27,7 @@ def ConfigCreate():
     # Rendering
     SmoothieConfig['rendering'] = {
     "process": 'ffmpeg.exe',
-    "arguments": Arguments} 
+    "arguments": '{Options} {Input}'+f' {EncoderSettings} '+'{Output}' } 
 
     # Create Config File
     with open(File, 'w') as configfile:
