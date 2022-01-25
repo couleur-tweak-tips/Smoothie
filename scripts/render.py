@@ -39,6 +39,9 @@ def Render(VideoList, Option):
             Input=['-i', f'{Temp}\\Render.vpy']
             Pipe=[]
             Output=['-o', Output]
+            print("Warning: av1an Support has been entirely added yet. So expect to encounter bugs.")
+            subprocess.run(['pause'],shell=True)
+            print("")
   
         if Arguments=="":
             Arguments=[]
