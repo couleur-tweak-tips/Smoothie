@@ -42,9 +42,9 @@ def Render(VideoList, Option):
             Output=f'-o {Output}'
             Arguments=Arguments.format(Input=Input,Output=Output)  
 
-        Main=Pipe+Settings[0]+f' {Arguments}'
-        print(f"Video: {Video}\n")      
-        run(Main,shell=True) 
+        Command=Pipe+Settings[0]+f' {Arguments}'
+        print(f"Video: {Video}\n")    
+        run(Command,shell=True) 
         print("")
 
         
