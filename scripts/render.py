@@ -32,16 +32,15 @@ def Render(VideoList, Option):
         if "ffmpeg.exe" in os.path.split(Settings[0])[1]:
             Options='-loglevel error -hide_banner -stats'
             Input="-i -"
-            VSPipe=f'vspipe -c y4m {Temp}\\Render.vpy - |'
-            Output=Output
+            VSPipe=f'vspipe -c y4m "{Temp}\\Render.vpy" - |'
+            Output=f'"{Output}"'
             Arguments=Arguments.format(Options=Options,Input=Input,Output=Output)
 
         elif "av1an.exe" in os.path.split(Settings[0])[1]:
-            Input=f'-i {Temp}\\Render.vpy'
+            Input=f'-i "{Temp}\\Render.vpy"'
             VSPipe=""
-            Output=f'-o {Output}'
+            Output=f'-o "{Output}"'
             Arguments=Arguments.format(Input=Input,Output=Output)  
-
         Command=f'{VSPipe} {Settings[0]} {Arguments}'
         print(f"Video: {Video}\n")    
         run(Command,shell=True) 
