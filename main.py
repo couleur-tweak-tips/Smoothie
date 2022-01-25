@@ -1,16 +1,10 @@
 import argparse
 import sys
-import os
 import subprocess
 sys.path.insert(0, 'scripts')
 from config import ConfigExist
 from render import Render
 
-# CWD
-CWD=os.environ["APPDATA"]+"/Smoothie"
-if os.path.exists(CWD) is False:
-    os.mkdir(CWD)
-    
 ConfigExist()
 
 Parser=argparse.ArgumentParser(prog="Smoothie",

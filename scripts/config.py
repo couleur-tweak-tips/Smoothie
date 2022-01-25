@@ -1,11 +1,11 @@
 import configparser
 from encoder import Settings 
-import os
-
-File=os.environ["APPDATA"]+"/Smoothie/Smoothie-Config.ini"
+from os import path
+from sys import argv
+File=f"{path.split(argv[0])[0]}/Smoothie-Config.ini"
 
 def ConfigExist():
-  if os.path.exists(File) is False:
+  if path.exists(File) is False:
     ConfigCreate()
 
 def ConfigCreate():

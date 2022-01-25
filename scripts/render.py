@@ -1,7 +1,7 @@
 import os
 from config import ConfigRead 
-from vs_script import Resample
-from vs_script import Interpolate
+from script import Resample
+from script import Interpolate
 from subprocess import run
 
 Temp=os.environ["TEMP"]
@@ -32,17 +32,17 @@ def Render(VideoList, Option):
         if "ffmpeg.exe" in os.path.split(Settings[0])[1]:
             Options='-loglevel error -hide_banner -stats'
             Input="-i -"
-            Pipe=f'vspipe -y {Temp}\\Render.vpy - | '
+            VSPipe=f'vspipe -c y4m {Temp}\\Render.vpy - |'
             Output=Output
             Arguments=Arguments.format(Options=Options,Input=Input,Output=Output)
 
         elif "av1an.exe" in os.path.split(Settings[0])[1]:
             Input=f'-i {Temp}\\Render.vpy'
-            Pipe=""
+            VSPipe=""
             Output=f'-o {Output}'
             Arguments=Arguments.format(Input=Input,Output=Output)  
 
-        Command=Pipe+Settings[0]+f' {Arguments}'
+        Command=f'{VSPipe} {Settings[0]} {Arguments}'
         print(f"Video: {Video}\n")    
         run(Command,shell=True) 
         print("")
