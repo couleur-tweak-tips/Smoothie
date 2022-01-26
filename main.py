@@ -1,6 +1,7 @@
 import argparse
 import sys
 import subprocess
+from os import path
 sys.path.insert(0, 'scripts')
 from config import ConfigExist
 from render import Render
@@ -31,4 +32,4 @@ if Arguments.resample is not None:
 elif Arguments.interpolate is not None:
     Render(Arguments.interpolate, "interpolate")
 elif Arguments.edit is True:
-    subprocess.Popen(['start',f'{CWD}/Smoothie-Config.ini'],shell=True)     
+    subprocess.Popen(['start',f'{path.split(sys.argv[0])[0]}/Smoothie-Config.ini/Smoothie-Config.ini'],shell=True)     
