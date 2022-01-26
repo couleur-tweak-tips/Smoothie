@@ -1,6 +1,5 @@
 from subprocess import run, DEVNULL, STDOUT
 
-
 NVENC=('-hwaccel cuda -threads 8',
 '-c:v hevc_nvenc -rc constqp -preset p7 -qp 18', 
 '-c:v h264_nvenc -rc constqp -preset p7 -qp 15')
