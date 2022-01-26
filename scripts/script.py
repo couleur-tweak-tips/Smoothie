@@ -10,7 +10,6 @@ def Resample(Video, Intensity, FPS):
 from vapoursynth import core
 import vapoursynth as vs
 import havsfunc as haf
-import adjust
 video = core.ffms2.Source(source=r"{Video}", cache=False)
 frame_gap = int(video.fps / 60)
 blended_frames = int(frame_gap * {Intensity})
@@ -32,7 +31,6 @@ def LegacyInterpolate(Video,FPS,Preset,Tuning,Algorithm):
 from vapoursynth import core
 import vapoursynth as vs
 import havsfunc as haf
-import adjust
 video = core.ffms2.Source(source=r"{Video}", cache=False)
 video = haf.InterFrame(video, GPU=True, NewNum={FPS}, Preset="{Preset}", Tuning="{Tuning}", OverrideAlgo={Algorithm})
 video.set_output()
@@ -47,7 +45,6 @@ def Interpolate(Video, InterpolateFPS, Preset, Tuning, Algorithm, ResampleFPS, I
 from vapoursynth import core
 import vapoursynth as vs
 import havsfunc as haf
-import adjust
 video = core.ffms2.Source(source=r"{Video}", cache=False)
 video = haf.InterFrame(video, GPU=True, NewNum={InterpolateFPS}, Preset="{Preset}", Tuning="{Tuning}", OverrideAlgo={Algorithm})
 frame_gap = int(video.fps / 60)
