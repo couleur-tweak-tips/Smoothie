@@ -1,8 +1,15 @@
-from os import environ
+from os import environ, path
+from urllib.request import urlretrieve 
 Temp=environ["TEMP"]
+Folder=f'{environ["APPDATA"]}\Smoothie'
 
+# Vapoursynth Scripts
+if path.exists(f'{Folder}/Resample.vpy') is False:
+    urlretrieve("https://raw.githubusercontent.com/Aetopia/Smoothie/master/Scripts/Resample.vpy", f'{Folder}/Resample.vpy')
 
-Folder=f'{environ["APPDATA"]}/Smoothie'
+if path.exists(f'{Folder}/Interpolate.vpy') is False:
+    urlretrieve("https://raw.githubusercontent.com/Aetopia/Smoothie/master/Scripts/Interpolate.vpy", f'{Folder}/Interpolate.vpy')
+
 # Resample
     
 def Resample(Video, Intensity, FPS):
@@ -26,7 +33,7 @@ video.set_output()
     Resample.write(Script)
     Resample.close()
     
-    VSPipeArgs=f'-a Video="{Video}" -a Intensity="{Intensity}" -a FPS="{FPS}" {Folder}/scripts/Resample.vpy'
+    VSPipeArgs=f'-a Video="{Video}" -a Intensity="{Intensity}" -a FPS="{FPS}" "{Folder}/Resample.vpy"'
     return VSPipeArgs
 
 # Interpolate
@@ -51,5 +58,5 @@ video.set_output()
     Interpolate.write(Script)
     Interpolate.close() 
 
-    VSPipeArgs=f'-a Video="{Video}" -a InterpolateFPS="{InterpolateFPS}" -a Preset="{Preset}" -a Tuning="{Tuning}" -a Algorithm="{Algorithm}" -a ResampleFPS="{ResampleFPS}" -a Intensity="{Intensity}" {Folder}/scripts/Interpolate.vpy'
+    VSPipeArgs=f'-a Video="{Video}" -a InterpolateFPS="{InterpolateFPS}" -a Preset="{Preset}" -a Tuning="{Tuning}" -a Algorithm="{Algorithm}" -a ResampleFPS="{ResampleFPS}" -a Intensity="{Intensity}" "{Folder}Interpolate.vpy"'
     return VSPipeArgs  

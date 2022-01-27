@@ -1,10 +1,12 @@
 import argparse
 import sys
 import subprocess
-from os import path
-sys.path.insert(0, 'scripts')
+from os import environ
+sys.path.insert(0, 'modules')
 from config import ConfigExist
 from render import Render
+
+Folder=f'{environ["APPDATA"]}/Smoothie'
 
 ConfigExist()
 
@@ -32,4 +34,4 @@ if Arguments.resample is not None:
 elif Arguments.interpolate is not None:
     Render(Arguments.interpolate, "interpolate")
 elif Arguments.edit is True:
-    subprocess.Popen(['start',f'{path.split(sys.argv[0])[0]}/Smoothie-Config.ini/Smoothie-Config.ini'],shell=True)     
+    subprocess.Popen(['start',f'{Folder}/Smoothie-Config.ini'],shell=True)     
