@@ -58,5 +58,5 @@ video.set_output()
     Interpolate.write(Script)
     Interpolate.close() 
 
-    VSPipeArgs=f'-a Video="{Video}" -a InterpolateFPS="{InterpolateFPS}" -a Preset="{Preset}" -a Tuning="{Tuning}" -a Algorithm="{Algorithm}" -a ResampleFPS="{ResampleFPS}" -a Intensity="{Intensity}" "{Folder}Interpolate.vpy"'
+    VSPipeArgs=f'-a Video="{Video}" -a InterpolateFPS="{InterpolateFPS}" -a Preset="{Preset}" -a Tuning="{Tuning}" -a Algorithm="{Algorithm}" -a ResampleFPS="{ResampleFPS}" -a Intensity="{Intensity}" "{Folder}/Interpolate.vpy"'
     return VSPipeArgs  
