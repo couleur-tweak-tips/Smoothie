@@ -4,12 +4,9 @@ from script import Resample
 from script import Interpolate
 from subprocess import run
 
-Temp=os.environ["TEMP"]
-
-# Variables
-
 def Render(VideoList, Option):
     Settings=ConfigRead(Option)
+    Temp=os.environ["TEMP"]
     for Video in list(VideoList):
         
         Video=os.path.abspath(Video)

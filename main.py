@@ -23,7 +23,7 @@ help="Interpolate and resample single or multiple videos at once.",
 nargs='*',
 metavar=("<Videos>"))
 
-Parser.add_argument('-edit',action="store_true",help="Edit Smoothie's config file.")
+Parser.add_argument('-edit',action="store_true",help="Edit Smoothie's Config file.")
 
 Arguments=Parser.parse_args()
 

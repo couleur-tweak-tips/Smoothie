@@ -24,21 +24,7 @@ video.set_output()
     Resample.write(Script)
     Resample.close()
 
-# Broken
-def LegacyInterpolate(Video,FPS,Preset,Tuning,Algorithm):
-    Interpolate = open(Temp+"/Render.vpy", "w+")
-    Script=f"""
-from vapoursynth import core
-import vapoursynth as vs
-import havsfunc as haf
-video = core.ffms2.Source(source=r"{Video}", cache=False)
-video = haf.InterFrame(video, GPU=True, NewNum={FPS}, Preset="{Preset}", Tuning="{Tuning}", OverrideAlgo={Algorithm})
-video.set_output()
-"""
-    Interpolate.write(Script)
-    Interpolate.close()
-
-# Interpolate + Blur
+# Interpolate
 def Interpolate(Video, InterpolateFPS, Preset, Tuning, Algorithm, ResampleFPS, Intensity):
     Interpolate = open(Temp+"/Render.vpy", "w+")
     Script=f"""

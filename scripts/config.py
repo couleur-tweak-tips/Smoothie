@@ -62,20 +62,7 @@ def ConfigRead(Option):
 
     return (Process, Arguments, 
     InterpolateFPS, Speed, Tuning, Algorithm, 
-    ResampleFPS, Intensity)   
-
-"""  
-  elif Option == "interpolate":
-    FPS=SmoothieConfig['interpolation']['fps']
-
-    Speed=SmoothieConfig['interpolation']['speed']
-
-    Tuning=SmoothieConfig['interpolation']['tuning']
-
-    Algorithm=SmoothieConfig['interpolation']['algorithm']
-
-    return (Process, Arguments, FPS, Speed, Tuning, Algorithm)
-"""     
+    ResampleFPS, Intensity)
 
   
 
