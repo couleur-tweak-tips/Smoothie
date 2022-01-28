@@ -1,8 +1,8 @@
 from subprocess import run, DEVNULL, STDOUT
 
 NVENC=('-hwaccel cuda -threads 8',
-'-c:v hevc_nvenc -rc constqp -preset p7 -qp 18', 
-'-c:v h264_nvenc -rc constqp -preset p7 -qp 15')
+'-c:v hevc_nvenc -rc vbr -cq 18', 
+'-c:v h264_nvenc -rc vbr -cq 15')
 
 AMF=('-hwaccel d3d11va',
 '-c:v hevc_amf -quality quality -qp_i 16 -qp_p 18 -qp_b 20',
