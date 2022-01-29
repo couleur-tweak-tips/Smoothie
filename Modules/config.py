@@ -18,7 +18,8 @@ def ConfigCreate():
     'fps': '480',
     'speed': 'medium',
     'tuning': 'weak',
-    'algorithm': '23'
+    'algorithm': '23',
+    'program': 'svp'
     }
 
     SmoothieConfig['resampling'] = {
@@ -58,12 +59,14 @@ def ConfigRead(Option):
 
     Algorithm=SmoothieConfig['interpolation']['algorithm']
 
+    Program=SmoothieConfig['interpolation']['program']
+
     ResampleFPS=SmoothieConfig['resampling']['fps']
 
     Intensity=SmoothieConfig['resampling']['intensity']
 
     return (Process, Arguments, 
-    InterpolateFPS, Speed, Tuning, Algorithm, 
+    InterpolateFPS, Speed, Tuning, Algorithm, Program,
     ResampleFPS, Intensity)
 
   

@@ -37,14 +37,22 @@ video.set_output()
     return VSPipeArgs
 
 # Interpolate
-def Interpolate(Video, InterpolateFPS, Preset, Tuning, Algorithm, ResampleFPS, Intensity):
+def Interpolate(Video, InterpolateFPS, Preset, Tuning, Algorithm, Program, ResampleFPS, Intensity):
     Interpolate = open(Temp+"/Render.vpy", "w+")
     Script=f"""
 from vapoursynth import core
 import vapoursynth as vs
 import havsfunc as haf
-video = core.ffms2.Source(source=r"{Video}", cache=False)
-video = haf.InterFrame(video, GPU=True, NewNum={InterpolateFPS}, Preset="{Preset}", Tuning="{Tuning}", OverrideAlgo={Algorithm})
+Program="{Program}".lower()
+video = core.ffms2.Source(source=r'{Video}', cache=False)
+if Program == 'svp':
+	video = haf.InterFrame(video, GPU=True, NewNum={InterpolateFPS}, Preset={Preset}, Tuning={Tuning}, OverrideAlgo={Algorithm})
+elif Program == 'rife':
+	from vsrife import RIFE
+	video = core.resize.Bicubic(video, format=vs.RGBS)
+	while video.fps < {InterpolateFPS}:
+		video = RIFE(video)
+	video = core.resize.Bicubic(video, format=vs.YUV420P8, matrix_s="709")
 frame_gap = int(video.fps / 60)
 blended_frames = int(frame_gap * {Intensity})
 if blended_frames > 0:
@@ -58,5 +66,5 @@ video.set_output()
     Interpolate.write(Script)
     Interpolate.close() 
 
-    VSPipeArgs=f'-a Video="{Video}" -a InterpolateFPS="{InterpolateFPS}" -a Preset="{Preset}" -a Tuning="{Tuning}" -a Algorithm="{Algorithm}" -a ResampleFPS="{ResampleFPS}" -a Intensity="{Intensity}" "{Folder}/Interpolate.vpy"'
+    VSPipeArgs=f'-a Video="{Video}" -a InterpolateFPS="{InterpolateFPS}" -a Preset="{Preset}" -a Tuning="{Tuning}" -a Algorithm="{Algorithm}" -a Program="{Program}" -a ResampleFPS="{ResampleFPS}" -a Intensity="{Intensity}" "{Folder}/Interpolate.vpy"'
     return VSPipeArgs  

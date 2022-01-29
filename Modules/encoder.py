@@ -62,9 +62,3 @@ def GetEncoder():
                         Arguments=CPU[1]
             break    
     return (HWAccelArgs, Arguments)
-
-
-
-
-
-

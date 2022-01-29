@@ -19,7 +19,7 @@ def Render(VideoList, Option):
             VSPipeArgs=Resample(Video,Settings[2],Settings[3])
             Prefix="Resampled"
         elif Option == "interpolate":
-            VSPipeArgs=Interpolate(Video,Settings[2],Settings[3],Settings[4],Settings[5],Settings[6],Settings[7]) 
+            VSPipeArgs=Interpolate(Video,Settings[2],Settings[3],Settings[4],Settings[5],Settings[6],Settings[7],Settings[8]) 
             Prefix="Interpolated" 
 
         Output=f"{VideoPath}\\{Prefix}_{VideoFile}"
