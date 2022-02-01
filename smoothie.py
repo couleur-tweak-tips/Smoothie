@@ -15,8 +15,8 @@ Arguments=Parser.parse_args()
 
 # Functions
 def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/recipe.ini", Interpolate=False, Prefix="Resampled"):
-    Program=ConfigParser()
-    Program.read(Recipe)
+    Config=ConfigParser()
+    Config.read(Recipe)
     Queue=len(Videos)
     for Video in Videos:
         Queue-=1
@@ -24,16 +24,17 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
             if platform.system() == "Windows":
                 system(f"title Smoothie - Videos Queued: {Queue}")
             else:
-                print(f"Videos Queued: {Queue}\n")    
+                print(f"Videos Queued: {Queue}")    
         else:
             if platform.system() == "Windows":
                 system(f"title Smoothie")                       
         VideoPath, VideoFile=path.split(path.abspath(Video))[0],path.split(path.abspath(Video))[1]
-        Command=f'vspipe -c y4m -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath("vs.vpy")}" - | {Program["rendering"]["process"]} -y -loglevel error -hide_banner -stats -i - {Program["rendering"]["arguments"]} "{VideoPath}/{Prefix} {VideoFile}"'
-        print(f"Video: {Video}\n")
+        Command=f'vspipe -c y4m -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath("vs.vpy")}" - | ffmpeg -y -loglevel error -hide_banner -stats -i - {Config["rendering"]["arguments"]} "{VideoPath}/{Prefix} {VideoFile}"'
+        print(f"\nVideo: {Video}\n")
         run(Command,shell=True)
         print("")
 
+# Arguments Parsing
 if Arguments.resample is not None:
     if Path(Arguments.resample[0]).suffix == '.ini':
         Render(Arguments.resample[1::], Recipe=path.abspath(Arguments.resample[0]))
@@ -46,4 +47,4 @@ elif Arguments.interpolate is not None:
         Recipe=path.abspath(Arguments.interpolate[0]), 
         Interpolate=True,Prefix="Interpolated")
     else:
-        Render(Arguments.interpolate, Interpolate=True)         
+        Render(Arguments.interpolate, Interpolate=True)
