@@ -29,7 +29,7 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
             if platform.system() == "Windows":
                 system(f"title Smoothie")                       
         VideoPath, VideoFile=path.split(path.abspath(Video))[0],path.split(path.abspath(Video))[1]
-        Command=f'vspipe -c y4m -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath("Vapoursynth.vpy")}" - | {Program["rendering"]["process"]} -y -loglevel error -hide_banner -stats -i - {Program["rendering"]["arguments"]} "{VideoPath}/{Prefix} {VideoFile}"'
+        Command=f'vspipe -c y4m -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath("vs.vpy")}" - | {Program["rendering"]["process"]} -y -loglevel error -hide_banner -stats -i - {Program["rendering"]["arguments"]} "{VideoPath}/{Prefix} {VideoFile}"'
         print(f"Video: {Video}\n")
         run(Command,shell=True)
         print("")
