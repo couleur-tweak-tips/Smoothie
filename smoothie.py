@@ -13,14 +13,14 @@ Parser.add_argument('-resample', '-r', action="store", nargs="*")
 Parser.add_argument('-interpolate', '-i', action="store", nargs="*")
 Arguments=Parser.parse_args()
 
-# Functions
+# Render Function
 def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/recipe.ini", Interpolate=False, Prefix="Resampled"):
     Config=ConfigParser()
     Config.read(Recipe)
-    Queue=len(Videos)
+    Queue=len(Videos)-1
     for Video in Videos:
 
-        Queue-=1
+        # Queue
         if Queue != 0:
             if system() == "Windows":
                 import ctypes
@@ -32,6 +32,7 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
                 import ctypes
                 ctypes.windll.kernel32.SetConsoleTitleW(f"Smoothie - Rendering: {path.split(Video)[1]}")    
 
+        # Command
         VideoPath, VideoFile = path.split(path.abspath(Video))[0],path.split(path.abspath(Video))[1]
         VSPipe = f'vspipe -c y4m -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath(path.split(argv[0])[0])}/vs.vpy" -' 
         FFmpeg = f'ffmpeg -y -loglevel error -hide_banner -stats -i - {Config["rendering"]["arguments"]} "{VideoPath}/{Prefix} - {VideoFile}"'
