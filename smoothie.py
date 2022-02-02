@@ -35,7 +35,7 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
 
         # Command
         VideoPath, VideoFile = path.split(path.abspath(Video))[0],path.split(path.abspath(Video))[1]
-        VSPipe = f'vspipe -c y4m -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath(path.split(argv[0])[0])}/vs.vpy" -' 
+        VSPipe = f'vspipe -c y4m -p -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath(path.split(argv[0])[0])}/vs.vpy" -' 
         FFmpeg = f'ffmpeg -y -loglevel error -hide_banner -stats -i - {Config["rendering"]["arguments"]} "{VideoPath}/{Prefix} - {VideoFile}"'
         Command=f'{VSPipe} | {FFmpeg}'
         print(f"\n> Video: {path.split(Video)[1]}")
@@ -50,7 +50,11 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
                 break
             if Output:
                 try:
-                    print(f"> Time: {Output.strip().split('=')[5].split(' ')[0]} | Speed: x{Output.strip().split('=')[7].split(' ')[0].replace('x','')}", end='\r',flush=True)
+                    if 'Frame:' in Output:
+                        Frame = Output.strip().split(' (')[0]
+                    Time=f"Time: {Output.strip().split('=')[5].split(' ')[0]}"
+                    Speed=f"Speed: x{Output.strip().split('=')[7].split(' ')[0].replace('x','')}"    
+                    print(f"> {Frame} | {Time} | {Speed}", end='\r',flush=True)
                 except:
                     pass 
         print("")           
