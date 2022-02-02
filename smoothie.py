@@ -26,7 +26,8 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
                 import ctypes
                 ctypes.windll.kernel32.SetConsoleTitleW(f"Smoothie - Videos Queued: {Queue} | Rendering: {path.split(Video)[1]}")
             else:
-                print(f"Videos Queued: {Queue}")    
+                print(f"Videos Queued: {Queue}") 
+            Queue-=1       
         else:
             if system() == "Windows":
                 import ctypes
