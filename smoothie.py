@@ -9,12 +9,12 @@ from configparser import ConfigParser
 
 # CLI Arguments
 Parser=ArgumentParser(usage="",add_help=False)
-Parser.add_argument('-resample', '-r', action="store", nargs="*")
-Parser.add_argument('-interpolate', '-i', action="store", nargs="*")
+Parser.add_argument('-frameblend', '-fb', action="store", nargs="*")
+Parser.add_argument('-interpolate', '-ip', action="store", nargs="*")
 Arguments=Parser.parse_args()
 
 # Render Function
-def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/recipe.ini", Interpolate=False, Prefix="Resampled"):
+def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/recipe.ini", Interpolate=False, Prefix="Frameblended"):
     Config=ConfigParser()
     Config.read(Recipe)
     Queue=len(Videos)-1
@@ -35,7 +35,7 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
 
         # Command
         VideoPath, VideoFile = path.split(path.abspath(Video))[0],path.split(path.abspath(Video))[1]
-        VSPipe = f'vspipe -c y4m -p -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath(path.split(argv[0])[0])}/vs.vpy" -' 
+        VSPipe = f'vspipe -c y4m -p -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath(path.split(argv[0])[0])}/blender.vpy" -' 
         FFmpeg = f'ffmpeg -y -loglevel error -hide_banner -stats -i - {Config["rendering"]["arguments"]} "{VideoPath}/{Prefix} - {VideoFile}"'
         Command=f'{VSPipe} | {FFmpeg}'
         print(f"\n> Video: {path.split(Video)[1]}")
@@ -65,11 +65,11 @@ def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/reci
 
 
 # Arguments Parsing
-if Arguments.resample is not None:
-    if Path(Arguments.resample[0]).suffix == '.ini':
-        Render(Arguments.resample[1::], Recipe=path.abspath(Arguments.resample[0]))
+if Arguments.frameblend is not None:
+    if Path(Arguments.frameblend[0]).suffix == '.ini':
+        Render(Arguments.frameblend[1::], Recipe=path.abspath(Arguments.frameblend[0]))
     else:
-        Render(Arguments.resample)    
+        Render(Arguments.frameblend)    
 
 elif Arguments.interpolate is not None:
     if Path(Arguments.interpolate[0]).suffix == '.ini':
