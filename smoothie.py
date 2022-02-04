@@ -1,80 +1,59 @@
-# Modules
-from argparse import ArgumentParser
-from pathlib import Path
-from platform import system
-from os import path
-from sys import argv
-from subprocess import Popen, PIPE, STDOUT
+from sys import argv # parse args
+from os import path # split file extension
 from configparser import ConfigParser
+from yaml import load,FullLoader # parse the config
+from subprocess import run # Run vs
+#from random import choice # Randomize the smoothie's flavor))
 
-# CLI Arguments
-Parser=ArgumentParser(usage="",add_help=False)
-Parser.add_argument('-frameblend', '-fb', action="store", nargs="*")
-Parser.add_argument('-interpolate', '-ip', action="store", nargs="*")
-Arguments=Parser.parse_args()
+if len(argv) == 1:
+    print('''
+using Smoothie from the command line:
 
-# Render Function
-def Render(Videos, Recipe=f"{path.abspath(path.split(argv[0])[0])}/settings/recipe.ini", Interpolate=False, Prefix="Frameblended"):
-    Config=ConfigParser()
-    Config.read(Recipe)
-    Queue=len(Videos)-1
-    for Video in Videos:
+sm "D:\Video\input1.mp4" "D:\Video\input2.mp4" ...
+    Simply give in the path of the videos you wish to queue to smoothie
 
-        # Queue
-        if Queue != 0:
-            if system() == "Windows":
-                import ctypes
-                ctypes.windll.kernel32.SetConsoleTitleW(f"Smoothie - Videos Queued: {Queue} | Rendering: {path.split(Video)[1]}")
-            else:
-                print(f"Videos Queued: {Queue}") 
-            Queue-=1       
-        else:
-            if system() == "Windows":
-                import ctypes
-                ctypes.windll.kernel32.SetConsoleTitleW(f"Smoothie - Rendering: {path.split(Video)[1]}")    
+sm config.extension "D:\Video\input1.mp4" "D:\Video\input2.mp4" ...
+    You can also make the first argument be your custom config file's name, it'll look for it in the settings folder
+    ''')
+    exit(0)
 
-        # Command
-        VideoPath, VideoFile = path.split(path.abspath(Video))[0],path.split(path.abspath(Video))[1]
-        VSPipe = f'vspipe -c y4m -p -a Input="{path.abspath(Video)}" -a Interpolate="{Interpolate}" -a Config="{Recipe}" "{path.abspath(path.split(argv[0])[0])}/blender.vpy" -' 
-        FFmpeg = f'ffmpeg -y -loglevel error -hide_banner -stats -i - {Config["rendering"]["arguments"]} "{VideoPath}/{Prefix} - {VideoFile}"'
-        Command=f'{VSPipe} | {FFmpeg}'
-        print(f"\n> Video: {path.split(Video)[1]}")
-        Process = Popen(Command, shell=True, encoding='utf-8', stdout=PIPE, stderr=STDOUT)
+def ensure(file, desc):
+    if path.exists(file) == False:
+        print(f"{desc} file not found: {file}")
+        exit(1)
 
-        # Output
-        FullOutput=""
-        while True:
-            Output = Process.stdout.readline()
-            FullOutput+=Output
-            if Output == '' or Process.poll() is not None:
-                break
-            if Output:
-                try:
-                    if 'Frame:' in Output:
-                        Frame = Output.strip().split(' (')[0]
-                    Time=f"Time: {Output.strip().split('=')[5].split(' ')[0]}"
-                    Speed=f"Speed: x{Output.strip().split('=')[7].split(' ')[0].replace('x','')}"    
-                    print(f"> {Frame} | {Time} | {Speed}", end='\r',flush=True)
-                except:
-                    pass 
-        print("")           
-        Process.communicate()
-        if Process.returncode == 1:
-            print(FullOutput)
-            exit()
+if path.splitext(argv[1])[1] == '.ini':
+    recipe=path.abspath(argv[1])
+    queue=argv[2:]
+else:    
+    recipe=f'{path.abspath(path.dirname(argv[0]))}/settings/recipe.ini'
+    queue=argv[1:]
 
+conf=ConfigParser()
+conf.read(recipe)
 
-# Arguments Parsing
-if Arguments.frameblend is not None:
-    if Path(Arguments.frameblend[0]).suffix == '.ini':
-        Render(Arguments.frameblend[1::], Recipe=path.abspath(Arguments.frameblend[0]))
+for video in list(queue):
+    """
+    if ['conf']['misc']['random flavors'] == True:
+        flavors = ('Strawberry','Blueberry','Raspberry','Blackberry',
+        'Cherry', 'Cranberry','Coconut','Peach','Apricot',
+        'Dragonfruit','Grapefruit', 'Melon','Papaya',
+        'Watermelon','Banana','Pineapple','Apple','Kiwi')
     else:
-        Render(Arguments.frameblend)    
+        flavors = ('Smoothie')
+    """ 
+    filename, ext = path.splitext(video)
 
-elif Arguments.interpolate is not None:
-    if Path(Arguments.interpolate[0]).suffix == '.ini':
-        Render(Arguments.interpolate[1::], 
-        Recipe=path.abspath(Arguments.interpolate[0]), 
-        Interpolate=True,Prefix="Interpolated")
+    if conf['misc']['folder'].lower() in ['null','','none','no','n']:
+        outdir = path.abspath(path.split(video)[0])
     else:
-        Render(Arguments.interpolate, Interpolate=True, Prefix="Interpolated")
+        outdir = path.abspath(conf['misc']['folder'])
+
+    out = f'{outdir}/{filename} - Smoothie.{conf["misc"]["container"]}'
+   
+    print(f'> Video: {path.abspath(video)}\n')
+    command = [ # Split in two for readability/
+        f'vspipe -c y4m -a input_video="{path.abspath(video)}" -a config_filepath="{recipe}" "{path.join(path.dirname(argv[0]))}/blender.vpy" -',
+        f'ffmpeg -y -hide_banner -loglevel warning -stats -i - {conf["encoding"]["args"]} "{out}"'
+    ]
+    run(f'{command[0]} | {command[1]}',shell=True)        
