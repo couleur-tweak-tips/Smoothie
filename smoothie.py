@@ -79,8 +79,8 @@ for video in queue:
     
     command = [ # Split in two for readability
         
-        f"cmd /c {vspipe} -y \"{path.join(path.dirname(__file__), vpy)}\" --arg input_video=\"{video}\" --arg config_filepath=\"{config_filepath}\"",
-        f"- | {conf['encoding']['process']} -hide_banner -loglevel warning -stats -i - {conf['encoding']['args']} \"{out}\""
+        f'{vspipe} -y "{path.join(path.dirname(__file__), vpy)}" --arg input_video="{video}" --arg config_filepath="{config_filepath}"',
+        f'- | {conf["encoding"]["process"]} -hide_banner -loglevel warning -stats -i - -map 0 {conf["encoding"]["args"]} -c:a copy "{out}"'
         # -i \"{video}\" -map 0:v -map 1:a?
     ]
     if (conf['misc']['verbose']) in yes:
