@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
-from sys import argv,exit
+from sys import argv, exit
 from os import path, system
 from configparser import ConfigParser
-from subprocess import run
+from subprocess import run, Popen, PIPE
 from random import choice # Randomize smoothie's flavor
 
 # Bool aliases
@@ -119,10 +119,9 @@ for video in args.input: # Loops through every single video
         vpy = path.abspath(path.join(path.dirname(__file__),'blender.vpy'))
     
     command = [ # This is the master command, it gets appended some extra output args later down
-    f'{vspipe} -y "{vpy}" --arg input_video="{video}" --arg config_filepath="{config_filepath}" ',
-    f'- | {conf["encoding"]["process"]} -hide_banner -loglevel warning -stats -i - ',
+    f'{vspipe} -y "{vpy}" --arg input_video="{path.abspath(video)}" --arg config_filepath="{config_filepath}" -',
+    f'{conf["encoding"]["process"]} -hide_banner -loglevel warning -stats -i - '
     ]
-
     if args.peek:
         frame = int(args.peek[0]) # Extracting the frame passed from the singular array
         command[0] += f'--start {frame} --end {frame}'
@@ -139,6 +138,6 @@ for video in args.input: # Loops through every single video
         for cmd in command: print(cmd)
         print(f"Queuing video: {video}")
 
-    run(' '.join(command),shell=True)
+    run(command[1], stdin = Popen(command[0], stdout = PIPE).stdout)
 
 system(f"title [{round}/{len(args.input)}] Smoothie - Finished! (EOF)")
