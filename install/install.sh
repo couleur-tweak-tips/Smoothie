@@ -6,15 +6,13 @@ while true; do
         [Nn]* ) exit;;
         * ) echo "Please answer y or n.";;
     esac
+done
 
 echo "Welcome to the Smoothie installation script!"
-sleep 1
 echo "Please make sure you have Git and Python installed."
-sleep 1
-echo "Please do not press any button during the installation."
 sleep 3
+echo "Please do not press any button during the installation."
 echo "Checking for required packages..."
-
 # CHECKING #########################
 
 # Check if python is installed
@@ -51,8 +49,6 @@ fi
 # ENDING #################################################
 echo "Finishing up..."
 echo "alias sm='python $PWD/smoothie.py'" >> $HOME/.bashrc
-sleep 1
 echo "Thank you for installing Smoothie. Please join our discord server 'discord.gg/CTT', it would mean the best to us!"
-sleep 1
 echo "We added a alias to your bashrc for quick use of smoothie."
 exit
