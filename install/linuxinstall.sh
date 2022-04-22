@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e # Exits program if any command fails
+
 while true; do
     read -p "NOTICE: Smoothie is in early stages and has only been tested on Arch Linux, do you wish to try this script? [Y/N]" yn
     case $yn in
