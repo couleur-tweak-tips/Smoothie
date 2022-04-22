@@ -39,7 +39,7 @@ fi
 # Aquire sudo/su and automate
 if command -v /usr/bin/sudo >/dev/null 2>&1
 then
-  echo "Sudo is installed!"  # POSIX compliant, works on every shell that supports this [bash, zsh and tons more]
+  echo "Sudo is installed, will use that for prvileges!"  # POSIX compliant, works on every shell that supports this [bash, zsh and tons more]
     sudo cp ./plugins/*.py /usr/lib/python*/site-packages/ && curl https://github.com/couleurm/vs-frameblender/releases/download/1.2/vs-frameblender-1.2.so -o /usr/lib/vapoursynth/vs-frameblender-1.2.so
 else
   echo "Sudo is not installed, will use su for privileges!"
