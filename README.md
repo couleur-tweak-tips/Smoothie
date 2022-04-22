@@ -50,7 +50,7 @@ To install Smoothie and its dependencies for Windows, run this install script:
 ```powershell
 powershell "irm smoothie.ctt.cx|iex"
 ```
-For Linux users and those who seek for a manual installation/already have a Python 3.9/VapourSynth, scroll all the way down
+For Linux users, install Smoothies dependencies down below, and run the linuxinstall.sh script which is located in the "install" folder.
 
 ## Using Smoothie
 You can simply select one multiple videos and right click and of them -> Send To -> Smoothie
