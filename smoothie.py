@@ -1,9 +1,24 @@
 from argparse import ArgumentParser
-from sys import argv,exit
-from os import path, system
+from sys import argv, exit
+from os import path, system#, getcwd
 from configparser import ConfigParser
-from subprocess import run
+import subprocess
+from subprocess import run, PIPE, Popen
 from random import choice # Randomize smoothie's flavor
+import platform # Get OS (detect win/linux)
+
+if platform.architecture()[0] != '64bit':
+    print('This script is only compatible with 64bit systems.')
+    exit(1)
+
+isLinux=platform.system() == 'Linux' 
+isWin=platform.system() == 'Windows' 
+if not isWin and not isLinux:
+    print(f'Unsupported OS "{platform.system()}"')
+    exit(1)
+
+def pause(text):
+    none = input(text)
 
 # Bool aliases
 yes = ['True','true','yes','y','1']
@@ -23,15 +38,31 @@ parser.add_argument("-vpy",              help="specify a VapourSynth script",   
 args = parser.parse_args()
 
 if args.dir:
-    run(f'explorer {path.dirname(argv[0])}')
-    exit(0)
+    scriptDir = path.dirname(__file__)
+    if isWin:
+        run(f'explorer {scriptDir}')
+        exit(0)
+    elif isLinux:
+        print(scriptDir)
+        exit(0)
+    
 if args.recipe:
+
     recipe = path.abspath(path.join(path.dirname(__file__), "settings/recipe.ini"))
+
     if path.exists(recipe) == False:
-        print("config path does not exist (are you messing with files?), exitting")
-        run('powershell -NoLogo')
-    run(f'explorer {recipe}')
-    exit(0)
+        print("config path does not exist (are you messing with files?), exitting..")
+        pause()
+        exit(1)
+
+    if isWin:
+        run(path.abspath(recipe), shell=True)
+        exit(0)
+    elif isLinux:
+        print('What code editor would you like to open your recipe with? (e.g nano, vim, code)')
+        print(f'This file is located at {recipe}')
+        editor = input('Editor:')
+        run(f'{path.abspath(editor)} {path.abspath(recipe)}', shell=True)
 
 
 conf = ConfigParser()
@@ -56,7 +87,12 @@ round = 0 # Reset the round counter
 
 for video in args.input: # Loops through every single video
 
-    # Title
+    if not args.verbose:
+        if isWin:
+            clear = 'cls'
+        elif isLinux:      
+            clear = 'clear'
+        run(clear, shell =  True)  
 
     round += 1
 
@@ -65,7 +101,8 @@ for video in args.input: # Loops through every single video
     if len(args.input) > 1:
         title = f'[{round}/{len(args.input)}] ' + title
 
-    system(f"title {title}")
+    if isWin:
+        system(f"title {title}")
 
     # Suffix
 
@@ -105,8 +142,11 @@ for video in args.input: # Loops through every single video
         count+=1
 
     # VapourSynth
+    if isWin:
+        vspipe = path.join(path.dirname((path.dirname(__file__))),'VapourSynth','VSPipe.exe')
 
-    vspipe = path.join(path.dirname((path.dirname(__file__))),'VapourSynth','VSPipe.exe')
+    elif isLinux:
+        vspipe = 'vspipe'
 
     if args.vpy:
 
@@ -119,9 +159,14 @@ for video in args.input: # Loops through every single video
         vpy = path.abspath(path.join(path.dirname(__file__),'blender.vpy'))
     
     command = [ # This is the master command, it gets appended some extra output args later down
-    f'{vspipe} -y "{vpy}" --arg input_video="{video}" --arg config_filepath="{config_filepath}" ',
-    f'- | {conf["encoding"]["process"]} -hide_banner -loglevel warning -stats -i - ',
+    f'{vspipe} -c y4m "{vpy}" --arg input_video="{path.abspath(video)}" --arg config_filepath="{config_filepath}" - ',
+    f'{conf["encoding"]["process"]} -hide_banner -loglevel warning -stats -i - ',
     ]
+
+    if isWin:
+        map = '-map 0:v -map 1:a?'
+    elif isLinux:
+        map = '-map 0:v -map 1:a\?'
 
     if args.peek:
         frame = int(args.peek[0]) # Extracting the frame passed from the singular array
@@ -132,13 +177,25 @@ for video in args.input: # Loops through every single video
         command[1] += f'{conf["encoding"]["args"]} "{out}"'
     else:
         # Adds as input the video to get it's audio tracks and gets encoding arguments from the config file
-        command[1] += f'-i "{path.abspath(video)}" -map 0:v -map 1:a? {conf["encoding"]["args"]} "{out}"'
+        command[1] += f'-i "{path.abspath(video)}" {map} {conf["encoding"]["args"]} "{out}"'
 
     if args.verbose:
         command[0] += ' --arg verbose=True'
-        for cmd in command: print(cmd)
+        for cmd in command: print(f"{cmd}\n")
         print(f"Queuing video: {video}")
 
-    run(' '.join(command),shell=True)
-
-system(f"title [{round}/{len(args.input)}] Smoothie - Finished! (EOF)")
+    #if run(' '.join(command),shell=True).returncode != 0:
+    #    print(f"Something went wrong with {video}, press any key to un-pause")
+    #    system('pause>nul')
+ 
+    #run(command[1], stdin = Popen(command[0], stdout = PIPE).stdout)
+    #ps = subprocess.Popen((command[0]), stdout=subprocess.PIPE)
+    #output = subprocess.check_output((command[1]), stdin=ps.stdout)
+    #ps.wait()
+    exitcode = run((command[0] + '|' + command[1]), shell=True).returncode
+    if exitcode != 0:
+        print(f"Something went wrong with {video}, press any key to un-pause")
+        if isWin: system('pause>nul')
+        exit
+ 
+    system(f"title [{round}/{len(args.input)}] Smoothie - Finished! (EOF)")

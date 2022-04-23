@@ -11,6 +11,11 @@ def scaleWeights(frames):
 def scaleRange(frames, a, b):
     return [(x * (b - a) / (frames - 1)) + a for x in range(0, frames)]
     
+def ascending(frames):
+    r = [*range(frames+1)] # Increments frames by 1
+    r = r[1:] # Skips first element
+    return r
+    
 def equal(frames):
     return [1 / frames] * frames
 

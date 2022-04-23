@@ -105,14 +105,22 @@ if str(conf['misc']['deduplication']).lower() in yes:
     video = filldrops.FillDrops(video, thresh=0.001)
 
 if str(conf['frame blending']['enabled']).lower() in yes:
+
     import weighting
+    repartition = conf['frame blending']['weighting']
+
     frame_gap = int(video.fps / int(conf['frame blending']['fps']))
     blended_frames = int(frame_gap * float(conf['frame blending']['intensity']))
     if blended_frames > 0:
         if blended_frames % 2 == 0:  # If number is not odd (requires odd number of frames)
             blended_frames += 1
-        weights = weighting.equal(blended_frames)
-        video = core.frameblender.FrameBlend(video, weights, True)
+
+    if ',' in repartition: # , means it's a list (aka array)
+        weights = repartition
+    elif type(repartition) is str:
+        weights = eval(f'weighting.{repartition}({blended_frames})')
+    verb(f"Weights: {weights}")
+    video = core.frameblender.FrameBlend(video, weights, True)
     video = havsfunc.ChangeFPS(video, int(conf['frame blending']['fps']))
 
 video.set_output()
