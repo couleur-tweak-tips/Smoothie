@@ -9,7 +9,7 @@ if (-Not(Test-Path "$ScoopDir\shims\sm.shim")){
     Add-Content "$ScoopDir\shims\sm.shim" "path = `"$DIR\VapourSynth\python.exe`"$([Environment]::NewLine)args = `"$DIR\Smoothie\Smoothie.py`""
 }
 
-Invoke-RestMethod https://tl.ctt.cx | Invoke-Expression
+Invoke-RestMethod tl.ctt.cx | Invoke-Expression
 
 $rc = (Get-Content "$DIR\Smoothie\settings\recipe.ini") -replace ('libx264 -preset slow -crf 15',(Get-EncodingArgs))
 
