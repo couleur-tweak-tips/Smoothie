@@ -34,6 +34,7 @@ parser.add_argument("--encoding","-enc", help="specify override ffmpeg encoding 
 parser.add_argument("-verbose", "-v",    help="increase output verbosity",                  action="store_true"                                   )
 parser.add_argument("-curdir",  "-cd",   help="save all output to current directory",       action="store_true",                                  )
 parser.add_argument("-input",   "-i",    help="specify input video path(s)",                action="store", nargs="+", metavar='PATH',    type=str)
+parser.add_argument("-output",   "-o",    help="specify output video path(s)",              action="store", nargs="+", metavar='PATH',    type=str)
 parser.add_argument("-vpy",              help="specify a VapourSynth script",               action="store", nargs=1, metavar='PATH',      type=str)
 args = parser.parse_args()
 
@@ -140,6 +141,10 @@ for video in args.input: # Loops through every single video
     while path.exists(out):
         out = path.join(outdir, f'{filename} - {choice(flavors)} ({count}){ext}')
         count+=1
+    
+    if args.output:
+        if ((type(args.input) is list) and (len(args.input) == 1)):
+            out = args.output[0]
 
     # VapourSynth
     if isWin:
@@ -159,8 +164,8 @@ for video in args.input: # Loops through every single video
         vpy = path.abspath(path.join(path.dirname(__file__),'blender.vpy'))
     
     command = [ # This is the master command, it gets appended some extra output args later down
-    f'{vspipe} -c y4m "{vpy}" --arg input_video="{path.abspath(video)}" --arg config_filepath="{config_filepath}" - ',
-    f'{conf["encoding"]["process"]} -hide_banner -loglevel warning -stats -i - ',
+    f'{vspipe} "{vpy}" --arg input_video="{path.abspath(video)}" --arg config_filepath="{config_filepath}" -c y4m - ',
+    f'{conf["encoding"]["process"]} -hide_banner -loglevel error -stats -i - ',
     ]
 
     if isWin:
@@ -196,6 +201,6 @@ for video in args.input: # Loops through every single video
     if exitcode != 0:
         print(f"Something went wrong with {video}, press any key to un-pause")
         if isWin: system('pause>nul')
-        exit
+        exit(1)
  
     system(f"title [{round}/{len(args.input)}] Smoothie - Finished! (EOF)")
