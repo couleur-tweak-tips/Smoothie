@@ -2,13 +2,13 @@
 # 🧋 Smoothie [WIP]
 
 Smoothie is a fork of [blur](https://github.com/f0e/blur) rewritten in Python with the following enhancements:
-* Wrote in dead simple Python, code (cli & vpy script) is roughly 150 lines long. The only feature I can't bother to port is the [preview](https://github.com/f0e/blur/blob/master/blur/preview.cpp), which is made in C++/Windows only
-* Static and easy to access config file (called a "**recipe**"), you won't have to recreate/carry your config around each time you queue videos in another folder
+* Wrote in dead simple Python, code (cli & vpy script) is roughly 150 lines long. The only feature we can't bother to port is the [preview](https://github.com/f0e/blur/blob/master/blur/preview.cpp), which is made in C++
+* Static blur config, you won't have to recreate/carry your config around each time you change directory
 * Queue multiple files at once via Send To
 
 
-<details>
-<summary> It also has a simplified configuration, here called a "recipe" ;) </summary>
+<details open>
+<summary> Simplified configuration, here called a "recipe" ;) </summary>
 
 > Learn what each setting does on it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki/Configuring-Smoothie-(recipe))
 
@@ -45,15 +45,17 @@ out=1
 
 
 ## Installation
-
-### Windows
-To install Smoothie and its dependencies for Windows, run this install script command anywhere:
+To install Smoothie and its dependencies for Windows, run this install script:
 
 ```powershell
 powershell "irm smoothie.ctt.cx|iex"
 ```
-### Linux
-
+To install Smoothie and its dependencies for GNU/Linux, setup this install script:
+```
+cd install/
+chmod +x ./linuxinstall.sh
+./linuxinstall.sh
+```
 
 For Linux users and those who seek for a manual installation/already have a Python 3.9/VapourSynth, scroll all the way down
 
@@ -80,8 +82,7 @@ VapourSynth plugins
 - [FFMS2](https://github.com/FFMS/ffms2)
 - [HAvsFunc](https://github.com/HomeOfVapourSynthEvolution/havsfunc)
 - [SVPFlow](https://github.com/bjaan/smoothvideo/blob/main/SVPflow_LastGoodVersions.7z)
-- [vs-frameblender](https://github.com/couleurm/vs-frameblender)
+- [vs-frameblender](https://github.com/f0e/vs-frameblender)
 - [weighting.py](https://github.com/couleur-tweak-tips/Smoothie/blob/master/plugins/weighting.py)
 - [filldrops.py](https://github.com/couleur-tweak-tips/Smoothie/blob/master/plugins/filldrops.py)
 </details>
-
