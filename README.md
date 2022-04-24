@@ -50,6 +50,11 @@ To install Smoothie and its dependencies for Windows, run this install script:
 ```powershell
 powershell "irm smoothie.ctt.cx|iex"
 ```
+To install Smoothie and its dependencies for GNU/Linux, setup this install script:
+```
+chmod +x ./linuxinstall.sh
+./linuxinstall.sh
+
 For Linux users and those who seek for a manual installation/already have a Python 3.9/VapourSynth, scroll all the way down
 
 ## Using Smoothie
