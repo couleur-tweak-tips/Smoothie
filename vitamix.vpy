@@ -1,14 +1,16 @@
-from vapoursynth import core
+from os import path
+import sys
+sys.path.append(path.curdir)
 import vapoursynth as vs
-from os import path # To split file extension
+from vapoursynth import core
 from configparser import ConfigParser
-import havsfunc # aka Interframe2
+import havsfunc
 
-conf = ConfigParser()
-conf.read(config_filepath)
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# Bool aliases
+yes = ['True','true','yes','y','1']
+no = ['False','false','no','n','0','null','',None]
+
 
 def defined(var):
     # variable to test must be provided as a string
@@ -19,24 +21,31 @@ def defined(var):
         return False
     else:
         return True
-
+    
 def verb(msg):
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
     if defined('verbose') == True:
         print(logging.debug(f' {msg}'))
+        
+conf = ConfigParser()
+conf.read(config_filepath)
 
-# Bool aliases
-yes = ['True','true','yes','y','1']
-no = ['False','false','no','n','0','null','',None]
+core.num_threads=16 #8 #16
+core.add_cache=True
+core.max_cache_size=4000
 
+
+verb('Starting indexing..')
 if path.splitext(input_video)[1] == '.avi':
     video = core.avisource.AVISource(input_video)
-    video = core.fmtc.matrix(clip=video, mat="709", col_fam=vs.YUV, bits=16) # If you're gonna bother with .AVI (let me know of one valid case to use this container) you're probably using 709 anyways
+    video = core.fmtc.matrix(clip=video, mat="709", col_fam=vs.YUV, bits=16)
+    # If you're gonna bother working with .AVI you're probably using 709 anyways
+    # (let me know of one valid case to use this container as input)
     video = core.fmtc.resampling(clip=video, css="420")
     video = core.fmtc.bitdepth(clip=video, bits=8)
 else:
-    verb('Starting indexing..')
     video = core.ffms2.Source(source=input_video, cache=False)
-    verb(video)
 
 if defined('trim'):
 
@@ -57,31 +66,14 @@ if defined('trim'):
         ToSeconds(start)*fps,
         ToSeconds(end)*fps
     )
-verb('calculated trim')
+    verb(f'Calculated trim from {ToSeconds(start)} to {ToSeconds(end)}')
+    
 if float(conf['timescale']['in']) != 1: # Input timescale, done before interpolation
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * (1 / float(conf['timescale']['in']))))
 
-# Commented this out as I don't see RIFE being this much better than SVP, and it's not worth the time / long & confusing installation
-
-#   if str(conf['interpolation']['pre interpolation']['enabled']).lower() in yes: # Pre-interpolating with RIFE
-#
-#       video = core.resize.Bicubic(video, format=vs.RGBS)
-#       if str(conf['interpolation']['pre interpolation']['rife type']).lower() == 'cuda':
-#           from vsrife import RIFE
-#           while video.fps > conf['interpolation']['pre interpolation']['minimum fps']:
-#               video = RIFE(video)
-#       elif str(conf['interpolation']['pre interpolation']['rife type']).lower() == 'ncnn':
-#           video = core.resize.Bicubic(video, format=vs.RGBS)
-#           while video.fps < conf['interpolation']['pre interpolation']['minimum fps']:
-#               video = core.rife.RIFE(video)
-#       video = core.resize.Bicubic(video, format=vs.YUV420P8, matrix_s="709")
-
 if str(conf['interpolation']['enabled']).lower() in yes: # Interpolation using Interframe2 (uses SVP-Flow, which is also what blur uses)
 
-    if (conf['interpolation']['gpu']) in yes:
-        useGPU = True
-    elif (conf['interpolation']['gpu']) in no:
-        useGPU = False
+    useGPU = (conf['interpolation']['gpu']) in yes
 
     if str(conf['interpolation']['fps']).endswith('x'): # if  multiplier support
         interp_fps = int(video.fps * int((conf['interpolation']['fps']).replace('x','')))   
@@ -96,13 +88,16 @@ if str(conf['interpolation']['enabled']).lower() in yes: # Interpolation using I
         Tuning=str(conf['interpolation']['tuning']),
         OverrideAlgo=int(conf['interpolation']['algorithm'])
     )
-
+    
 if float(conf['timescale']['out']) != 1: # Output timescale, done after interpolation
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * float(conf['timescale']['out'])))
 
-if str(conf['misc']['deduplication']).lower() in yes:
+if conf['misc']['dedupthreshold'] not in no:
     import filldrops
-    video = filldrops.FillDrops(video, thresh=0.001)
+    video = filldrops.FillDrops(
+        video,
+        thresh = float((conf['misc']['dedupthreshold']))
+    )
 
 if str(conf['frame blending']['enabled']).lower() in yes:
 
@@ -120,7 +115,39 @@ if str(conf['frame blending']['enabled']).lower() in yes:
     elif type(repartition) is str:
         weights = eval(f'weighting.{repartition}({blended_frames})')
     verb(f"Weights: {weights}")
-    video = core.frameblender.FrameBlend(video, weights, True)
+    video = core.frameblender.FrameBlend(video, weights)
     video = havsfunc.ChangeFPS(video, int(conf['frame blending']['fps']))
+    
+if conf['flowblur']['amount'] not in no:
+    original = video # Makes an un-smeared copy to use for the mask later
+
+    s = core.mv.Super(video, 16, 16, rfilter=3)
+    bv = core.mv.Analyse(s, isb=True, blksize=16, plevel=2, dct=5)
+    fv = core.mv.Analyse(s, blksize=16, plevel=2, dct=5)
+    video = core.mv.FlowBlur(video, s, bv, fv, blur=(conf['flowblur']['amount']))
+
+    if conf['flowblur']['mask'] not in no:
+        
+        mask = conf['flowblur']['mask']
+        verb(f'Mixing in {mask_directory} and {mask}..')
+        if not path.exists(mask): # Then user specified a relative path, and needs to be verified
+            if '.' in mask: # Then the user specified a file extension
+                mask = path.join(mask_directory, f'{mask}')
+            else: # Then the user did not specify any image extension and it needs to loop through common exts
+                for extension in ['png','jpg','jpeg']:
+                    if not path.exists(mask):
+                        mask = path.join(mask_directory, f'{mask}.{extension}')
+                    else:
+                        continue # Loops until it ends if it found valid mask path
+
+        if not path.exists(mask): # Then even if we did some checks to convert to absolute path it still does not exists
+            raise vs.Error(f"The Mask filepath you provided does not exist: {mask}")
+ 
+        verb(f'Using mask {mask}')
+        filtered = video.std.Expr(expr=['x 0 -','',''])
+        GW = core.ffms2.Source(mask, cache=False)
+        BW = GW.resize.Bicubic(video.width,video.height, matrix_s='709',format=vs.GRAY8)
+        BW = BW.std.Levels( min_in=0, max_in=235, gamma =0.05, min_out=0, max_out=255)
+        video = havsfunc.Overlay(original, filtered, mask=BW)
 
 video.set_output()
