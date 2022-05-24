@@ -71,6 +71,6 @@ else
   echo "alias sm='python $PWD/smoothie.py'"
 fi
 
-echo "thanks for installing smoothie! a lot of people put a lot of time an effort into making this, wo please joing our discord (https://discord.gg/ctt) for any issues or just to meet the dev team!"
+echo "thanks for installing smoothie! a lot of people put a lot of time an effort into making this, so please consider joining our discord (https://discord.gg/ctt) for any issues or just to meet the dev team!"
 echo "remember to restart your terminal session for the 'sm' shortcut to work!"
 exit
