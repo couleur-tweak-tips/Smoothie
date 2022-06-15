@@ -1,3 +1,10 @@
+if (!$DIR){
+    "Why are you trying to run this script outside of scoop? get outta here"
+    "You can install Smoothie with the following command: iex(irm tl.ctt.cx);Get Smoothie"
+    pause;exit
+}
+
+
 Rename-Item -Path (Convert-Path "$DIR\Smoothie*") -NewName "Smoothie"
 
 if (-Not(Test-Path "$ScoopDir\shims\sm.exe")){
