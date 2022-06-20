@@ -1,4 +1,4 @@
-
+[]
 from sys import argv, exit
 from os import path, system, listdir, get_terminal_size, environ
 from helpers import *
@@ -14,6 +14,7 @@ if isWin:
     from tkinter import filedialog # Pick a file
     from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
     from win32con import HWND_TOPMOST # Make window stay on top
+    hwnd = GetForegroundWindow()
 
 def voidargs(args):
     if args.dir:
@@ -53,6 +54,11 @@ def runvpy(parser):
         if args.verbose: print(f'Stepping down from {argv[0]} to {step}')
         argv[0] = step
     voidargs(args)
+    
+    if args.override:
+        for override in args.override:
+            category, key, value = override.split(';').split(';')
+            conf[category][key] = value
 
     if args.input in [no, None] and not args.cui:
         if args.trim:
@@ -86,8 +92,7 @@ def runvpy(parser):
         conf = safe_load(file)
 
     if args.cui and conf['misc']['stay on top'] in yes:
-        hwnd = GetForegroundWindow()
-        SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,200,0)
+        SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,60,0)
 
     if not args.input and not args.trim:
         print("Failed to gather input videos")
@@ -123,24 +128,20 @@ def runvpy(parser):
     }
     passedArgs = conf['encoding']['args'].split(' ') # Make an array that contains what the user passed
 
-    if len(passedArgs) in (2,3): # If the user has two or three arguments (enc and std + optional upscale), it's probably a preset
-        for arg in passedArgs: # No maidens nor cases
-            enc, std = False, False
-            if arg in ['NV','NVENC','NVIDIA']: enc = 'NVENC'
-            if arg in ['AMD','AMF']:           enc = 'AMF'
-            if arg in ['Intel','QuickSync']:   enc = 'QuickSync'
-            if arg == 'CPU':                   enc = 'CPU'
-            if arg == 'x264':                  enc = 'CPU'; std = 'H264'
-            if arg == 'x265':                  enc = 'CPU'; std = 'H265'
-            
-            if arg in ['H264','H.264','AVC']:  std = 'H264'
-            if arg in ['HEVC','H.265','HEVC']: std = 'H265'
-        
-        if enc and std:
-            conf['encoding']['args'] = EncPresets[std][enc] # This makes use of the EncPresets dictionary declared above
-            if 'Upscale' in passedArgs or '4K' in passedArgs: conf['encoding']['args'] += ' -vf zscale=3840:2160:f=point'
-        elif enc or std:
-            print("Invalid encoding argument passed: " + passedArgs)
+    enc, std = False, False
+    for arg in passedArgs: # No maidens nor cases
+        if arg in ['NV','NVENC','NVIDIA']: enc = 'NVENC'
+        if arg in ['AMD','AMF']:           enc = 'AMF'
+        if arg in ['Intel','QuickSync']:   enc = 'QuickSync'
+        if arg == 'CPU':                   enc = 'CPU'
+        if arg == 'x264':                  enc = 'CPU'; std = 'H264'
+        if arg == 'x265':                  enc = 'CPU'; std = 'H265'
+        if arg in ['H264','H.264','AVC']:  std = 'H264'
+        if arg in ['HEVC','H.265','HEVC']: std = 'H265'
+
+    if enc and std:
+        conf['encoding']['args'] = EncPresets[std][enc] # This makes use of the EncPresets dictionary declared above
+        if 'Upscale' in passedArgs or '4K' in passedArgs: conf['encoding']['args'] += ' -vf zscale=3840:2160:f=point'
     
     for video in videos: # This loop ONLY converts all paths to literal, the actual for loop that does all the process is later down
         if type(video) is not str: video = video['filename']
@@ -263,6 +264,9 @@ def runvpy(parser):
                 vpy = path.abspath(args.vpy[0])
         else: vpy = path.abspath(path.join(path.dirname(argv[0]),'vitamix.vpy'))
 
+        if args.verbose:
+            conf['misc']['verbose'] = True
+
         command = [ # This is the master command, it gets appended some extra output args later down
         f'"{vspipe}" "{vpy}" --arg input_video="{path.abspath(video)}" --arg mask_directory="{mask_directory}" -y - ',
         f'{conf["encoding"]["process"]} -hide_banner -loglevel error -stats -stats_period 0.15 -i - ',
@@ -275,6 +279,7 @@ def runvpy(parser):
             command[0] += f'--arg config="{conf}" --start {frame} --end {frame}'
             command[1] += f' "{out}"' # No need to specify audio map, simple image output
         elif args.tonull:
+            command[0] += f'--arg config="{conf}"'
             command[1] += f' -f null NUL'
         elif args.tompv:
             a = conf['misc']['mpv bin']
@@ -290,8 +295,6 @@ def runvpy(parser):
             elif e==s:
                 print(f"Trimming point {s} to {e} on video {video} is invalid start and end are the same??")
                 continue
-            else:
-                print(f"Trimming ")
 
             conf['__TEMP'] = {}
             conf['__TEMP']['start'] = s
@@ -317,18 +320,27 @@ def runvpy(parser):
                     command[1] += ' -vf scale=in_range=full:out_range=full'
 
         if args.verbose:
-            conf['misc']['verbose'] = True
             for cmd in command: print(f"{cmd}\n")
             print(f"Queuing video: {video}, vspipe is {vspipe}")
-            run((command[0] + '|' + command[1]), shell=True)
+            try: a = run((command[0] + '|' + command[1]), shell=True)
+            except KeyboardInterrupt:
+                exit()
         else:
-            Bar(command, video)
+            log = Bar(command, video)
+            if (log):
+                SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,720,0)
+                print(command)
+                print("")
+                print(conf)
+                print(''.join(log))
+                print("VapourSynth and/or FFmpeg failed, here's a bunch of info you can share to help us debug")
+                pause();exit(1)
         # Don't join these two if statements together, the one at the top is in the loop, while the bottom is when it's finished, notice the tab difference
     
     if not args.verbose:
         if args.cui:
-            system(f"title [{iterations}/{len(args.input)}] Smoothie - Finished! (EOF)")
+            system(f"title [{iterations}/{len(videos)}] Smoothie - Finished! (EOF)")
         elif len(videos) > 1:
-            print(f"\033[u\033[0J Finished rendering {len(args.input)} videos", end='\r')
+            print(f"\033[u\033[0J✅ Finished rendering {len(videos)} videos", end='\r')
         else:
-            print(f"\033[u\033[0J", end='\r')
+            print(f"\033[u\033[?25h", end='\r')

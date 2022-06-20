@@ -22,6 +22,7 @@ parser.add_argument("-vpy",             help=" specify a VapourSynth script",   
 parser.add_argument("-cui",             help=" Make terminal stay on top moved on top left",    action="store_true",                                       )
 parser.add_argument("-tonull",          help=" Redirect VS' Y4M output to NULL (for debugging)",action="store_true",                                       )
 parser.add_argument("-tompv",           help=" Redirect VS' Y4M output to MPV  (for debugging)",action="store_true",                                       )
+parser.add_argument("-override",        help=" Override a recipe value e.g: category;key;value",action="store",       nargs="+", metavar='PATH',   type=str)
 
 
 exec.runvpy(parser)

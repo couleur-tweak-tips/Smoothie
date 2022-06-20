@@ -44,7 +44,7 @@ def Bar (command, video):
             )
         from yaspin import yaspin, Spinner
         from yaspin.spinners import Spinners
-        spinnertext = f'Indexing {path.basename(video)}'
+        spinnertext = f'\033[?25lIndexing {path.basename(video)}'
         
         if isWT: # then user is running Windows Terminal
             prog = PyTaskbar.Progress()
@@ -65,7 +65,9 @@ def Bar (command, video):
         stats = {}
         vid_length = get_length(video)
         First = False
+        log = []
         for current in process.stdout:
+            log += current
             if not First:
                 spinner.stop()
                 First = True
@@ -86,7 +88,7 @@ def Bar (command, video):
                 percentage = round((secs_rendered*100) / vid_length, 1)
 
                 columns = get_terminal_size()[0]
-                barsize = columns - (23 + len(path.basename(video)))
+                barsize = columns - (47 + len(path.basename(video)))
                 progress = round(((percentage / 100) * barsize))
 
                 #━ ╸
@@ -107,22 +109,31 @@ def Bar (command, video):
                 if (percentage <= 10): bar = ' ' + bar
                 
                 if 'x' in stats['speed']:
-                    stats['speed'] = str(round((float(stats['speed'].replace('x',''))), 1)) + 'x'
+                    stats['speed'] = str(round((float(stats['speed'].replace('x',''))), 2)) + 'x'
                 
+                w = "\033[38;5;255m"
+                g = "\033[38;5;245m"
                 print(
-f"\033[u\033[0J{path.basename(video)} \033[38;5;245m| \
-speed: {stats['speed']} \033[38;5;255m{percentage}\033[38;5;87m% \033[38;5;245m|\033[0m \
+f"\033[u\033[0J\033[?25l\
+{w}{path.basename(video)} {g}| \
+{w}time{g}: {stats['time']} \033[38;5;245m| \
+{w}speed{g}: {stats['speed']} \033[38;5;245m| \
+{w}{percentage}\033[38;5;87m% \033[38;5;245m|\033[0m \
 {bar}", end='\r')
                 #print(f"\033[u\033[0J{percentage}", end='\r')
-                if percentage == 100: break
-                
+                if percentage >= 100: break
         if isWT==True: setWTprogress(0) # Reset
         else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
-        return process
+        
+        process.communicate()
+        if process.returncode != 0:
+            return log
+        else:
+            return None
+        
     except KeyboardInterrupt:
         process.kill()
         spinner.stop()
         if isWT==True: setWTprogress(0)
         else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
-        print('Interrupted Smoothie (CTRL+C), exitting')
-        sys.exit(0)
+        print('\033[?25hInterrupted Smoothie (CTRL+C), exitting')    
