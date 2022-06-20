@@ -2,38 +2,38 @@
 # Learn how it can be fine-tuned @ https://github.com/couleur-tweak-tips/Smoothie/wiki
 
 interpolation:
-  enabled: n
-  fps: 1920
-  mask: cian
+  enabled: yes
+  fps: 480
+  mask: weak
   speed: medium
   tuning: weak
   algorithm: 23
   gpu: true
 
 frame blending:
-  enabled: y
+  enabled: yes
   fps: 60
   intensity: 1
-  weighting: gaussian
+  weighting: equal
 
 flowblur:
-  enabled: n
-  amount:
+  enabled: no
+  amount: 100
   mask:
 
 encoding:
   process: ffmpeg.exe
-  args: -c:v utvideo -vf scale=in_range=full:out_range=full
+  args: H264 CPU
 
 misc:
   mpv bin: mpv
-  stay on top: false
+  stay on top: true
   verbose: false
   ding after: 1
   folder: 
   container: .MKV
   flavors: fruits
-  dedupthreshold: 
+  dedupthreshold: 0
 
 timescale:
   in: 1.0
