@@ -6,6 +6,7 @@ from vapoursynth import core
 from configparser import ConfigParser
 import havsfunc
 from re import search
+from ast import literal_eval
 
 
 # Bool aliases
@@ -22,18 +23,16 @@ def defined(var):
         return False
     else:
         return True
-    
-def verb(msg):
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-    if defined('verbose') == True:
-        print(logging.debug(f' {msg}'))
 
 global conf
 conf = eval(config)
-verb(f"what is {conf['encoding']['args']}")
 
-verb('Starting indexing..')
+def verb(msg):
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    if conf['misc']['verbose'] == True:
+        print(logging.debug(f' {msg}'))
+    
 if path.splitext(input_video)[1] == '.avi':
     video = core.avisource.AVISource(input_video)
     video = core.fmtc.matrix(clip=video, mat="709", col_fam=vs.YUV, bits=16)
@@ -45,22 +44,10 @@ else:
     video = core.ffms2.Source(source=input_video, cache=False)
 
 if '__TEMP' in conf.keys():
-
-    # if type(trim) is bytes: # Convert bytestring to array to string T_T
-    #     trim = eval(''.join(map(chr, trim)))[0]
         
     fps = round(eval(str(video.fps))) # Converts str '1000000/3571' to int 280
-    # start, end = trim.split(',')
-    # verb(f"what is {start}, {end} and {fps}")
-    #def get_sec(time_str):
-    #    if type(time_str) is list: time_str = time_str[0]
-    #    if type(time_str) is str:
-    #        if '.' in time_str: time_str = time_str.split('.')[0]
-    #        if search('[a-zA-Z]', time_str) is not None:
-    #            raise Exception(f'Timecode to trim contains a letter: {time_str}')
-    #    # god bless https://stackoverflow.com/a/6402934
-    #    return sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(time_str).split(':'))))
     start, end = conf['__TEMP']['start'], conf['__TEMP']['end']
+    
     verb(f'Trimming {start} to {end} with fps {fps}')
     video = core.std.Trim(video, start, end)
     verb(f'Finished cutting trim from {start} to {end}')
@@ -103,15 +90,45 @@ if str(conf['frame blending']['enabled']).lower() in yes:
     if blended_frames > 0:
         if blended_frames % 2 == 0:  # If number is not odd (requires odd number of frames)
             blended_frames += 1
-
-    if ',' in repartition or type(repartition) is list: # , means it's a list (aka array)
-        weights = repartition
-    elif repartition in ['gauss','gaussSym','gaussian','gaussianSym'] and ';' in repartition:
-        rep, dev, bound = repartition.Split(';')
-        weights = eval(f'weighting.{repartition}(frames={blended_frames}, standard_deviation={dev}, bound={eval(bound)})')
+    
+    if type(repartition) is str:
+        repartition = conf['frame blending']['weighting'].split(';')[0]
+        adv = conf['frame blending']['weighting'].split(';')[1:]
+        argcount = len(adv)
     else:
-        weights = eval(f'weighting.{repartition}({blended_frames})')
-    verb(f"Weights: {weights}")
+        repartition = conf['frame blending']['weighting']
+
+    args = {'frames': blended_frames}
+
+    if repartition in ['gaussian','gauss','gaussianSym','gaussSym']:
+        if argcount >= 1:
+            args['standard_deviation'] = int(adv[0])
+        if argcount >= 2:
+            args['bound'] = literal_eval(adv[1])
+        if repartition in ['gaussian','gauss']:
+            weights = weighting.gaussian(**args)
+        else:
+            weights = weighting.gaussianSym(**args)
+    elif repartition == ['gaussianSym','gaussSym']:
+        weighting.gaussianSym(blended_frames)
+    elif repartition == 'custom':
+        args['func'] = adv[0]
+        if argcount >= 2:
+            args['bound'] = literal_eval(adv[1])
+        weights = weighting.custom(**args)
+    elif repartition == 'pyramid':
+        if argcount >= 1:
+            if adv[0] in yes:
+                args['reverse'] = True
+        weights = weighting.pyramid(**args)
+    elif type(repartition) is list:
+        weights = weighting.divide(frames=blended_frames, weights=repartition)
+    elif repartition[0] == '[':
+        weights = ast.literal_eval(repartition)
+    else:
+        weights = eval(f'weighting.{repartition}(frames={blended_frames})')
+    
+    #verb(f"Weights: {weights}")
     video = core.frameblender.FrameBlend(video, weights)
     video = havsfunc.ChangeFPS(video, int(conf['frame blending']['fps']))
     
@@ -140,14 +157,6 @@ if str(conf['frame blending']['enabled']).lower() in yes:
                             continue # Loops until it ends if it found valid mask path
             if not path.exists(mask): # Then even if we did some checks to convert to absolute path it still does not exists
                 raise vs.Error(f"The Mask filepath you provided does not exist: {mask}")
-
-            #rmask = core.imwri.Read(mask)
-            #video = core.std.MaskedMerge(
-            #    clipa=original,
-            #    clipb=video,
-            #    mask=rmask.std.Minimum().std.Minimum().std.Minimum().std.Minimum().std.BoxBlur(vradius = 6,vpasses = 2,hradius = 6,hpasses = 2),
-            #    first_plane=True
-            #    )
 
             verb(f'Using mask {mask}')
             filtered = video.std.Expr(expr=['x 0 -','',''])
