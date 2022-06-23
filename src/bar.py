@@ -7,20 +7,6 @@ from helpers import *
 import sys
 from textformat import *
 
-def probe(file_path:str):
-    
-    command_array = ["ffprobe",
-                 "-v", "quiet",
-                 "-print_format", "json",
-                 "-show_format",
-                 "-show_streams",
-                 file_path]
-    result = run(command_array, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-    return [
-        result.returncode,
-        loads(result.stdout),
-        result.stderr]
-
 def get_length(file_path:str):
     stream = probe(file_path)[1]['streams'][0]
 
