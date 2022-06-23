@@ -7,7 +7,8 @@ from configparser import ConfigParser
 import havsfunc
 from re import search
 from ast import literal_eval
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Bool aliases
 yes = ['True','true','yes','y','1', True]
@@ -26,12 +27,12 @@ def defined(var):
 
 global conf
 conf = eval(config)
+print(logging.debug(conf['misc']['verbose'] == True))
 
 def verb(msg):
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
     if conf['misc']['verbose'] == True:
         print(logging.debug(f' {msg}'))
+
     
 if path.splitext(input_video)[1] == '.avi':
     video = core.avisource.AVISource(input_video)
@@ -68,7 +69,7 @@ if str(conf['interpolation']['enabled']).lower() in yes: # Interpolation using I
          Preset=str(conf['interpolation']['speed']),
          Tuning=str(conf['interpolation']['tuning']),
          OverrideAlgo=int(conf['interpolation']['algorithm'])
-     )
+    )
     
 if float(conf['timescale']['out']) != 1: # Output timescale, done after interpolation
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * float(conf['timescale']['out'])))
@@ -104,7 +105,7 @@ if str(conf['frame blending']['enabled']).lower() in yes:
         if argcount >= 1:
             args['standard_deviation'] = int(adv[0])
         if argcount >= 2:
-            args['bound'] = literal_eval(adv[1])
+            args['bound'] = literal_eval(adv[1].strip())
         if repartition in ['gaussian','gauss']:
             weights = weighting.gaussian(**args)
         else:
@@ -114,7 +115,7 @@ if str(conf['frame blending']['enabled']).lower() in yes:
     elif repartition == 'custom':
         args['func'] = adv[0]
         if argcount >= 2:
-            args['bound'] = literal_eval(adv[1])
+            args['bound'] = literal_eval(adv[1].strip())
         weights = weighting.custom(**args)
     elif repartition == 'pyramid':
         if argcount >= 1:
@@ -124,45 +125,52 @@ if str(conf['frame blending']['enabled']).lower() in yes:
     elif type(repartition) is list:
         weights = weighting.divide(frames=blended_frames, weights=repartition)
     elif repartition[0] == '[':
-        weights = ast.literal_eval(repartition)
+        weights = literal_eval(repartition.strip())
     else:
-        weights = eval(f'weighting.{repartition}(frames={blended_frames})')
+        if not hasattr(weighting, repartition):
+            raise ValueError(f'Weighting {repartition} does not exist')
+        else:
+            weights = eval(f'weighting.{repartition}(frames={blended_frames})')
     
     #verb(f"Weights: {weights}")
     video = core.frameblender.FrameBlend(video, weights)
     video = havsfunc.ChangeFPS(video, int(conf['frame blending']['fps']))
-    
-    if conf['flowblur']['enabled'] not in no:
-                
-        if conf['flowblur']['amount'] not in no:
-            original = video # Makes an un-smeared copy to use for the mask later    
-            s = core.mv.Super(video, 16, 16, rfilter=3)
-            bv = core.mv.Analyse(s, isb=True, blksize=16, plevel=2, dct=5)
-            fv = core.mv.Analyse(s, blksize=16, plevel=2, dct=5)
-            video = core.mv.FlowBlur(video, s, bv, fv, blur=(conf['flowblur']['amount']))
 
-        if conf['flowblur']['mask'] not in no:
-            mask = conf['flowblur']['mask']
-            if type(mask_directory) is bytes:
-                mask_directory = ''.join(map(chr, mask_directory))
-            verb(f'Mixing in {mask_directory} and {mask}..')
-            if not path.exists(mask): # Then user specified a relative path, and needs to be verified
-                if '.' in mask: # Then the user specified a file extension
-                    mask = path.join(mask_directory, mask)
-                else: # Then the user did not specify any image extension and it needs to loop through common exts
-                    for extension in ['png','jpg','jpeg']:
-                        if not path.exists(mask):
-                            mask = path.join(mask_directory, f'{mask}.{extension}')
-                        else:
-                            continue # Loops until it ends if it found valid mask path
-            if not path.exists(mask): # Then even if we did some checks to convert to absolute path it still does not exists
-                raise vs.Error(f"The Mask filepath you provided does not exist: {mask}")
-
-            verb(f'Using mask {mask}')
-            filtered = video.std.Expr(expr=['x 0 -','',''])
-            GW = core.ffms2.Source(mask, cache=False)
-            BW = GW.resize.Bicubic(video.width,video.height, matrix_s='709',format=vs.GRAY8)
-            BW = BW.std.Levels( min_in=0, max_in=235, gamma =0.05, min_out=0, max_out=255)
-            video = havsfunc.Overlay(original, filtered, mask=BW)
+if conf['flowblur']['enabled'] not in no:
+    if conf['flowblur']['amount'] not in no:
+        original = video # Makes an un-smeared copy to use for the mask later    
+        s = core.mv.Super(video, 16, 16, rfilter=3)
+        bv = core.mv.Analyse(s, isb=True, blksize=16, plevel=2, dct=5)
+        fv = core.mv.Analyse(s, blksize=16, plevel=2, dct=5)
+        video = core.mv.FlowBlur(video, s, bv, fv, blur=(conf['flowblur']['amount']))
+    if conf['flowblur']['mask'] not in no:
+        mask = conf['flowblur']['mask']
+        if type(mask_directory) is bytes:
+            mask_directory = ''.join(map(chr, mask_directory))
+        verb(f'Mixing in {mask_directory} and {mask}..')
+        if not path.exists(mask): # Then user specified a relative path, and needs to be verified
+            if '.' in mask: # Then the user specified a file extension
+                mask = path.join(mask_directory, mask)
+            else: # Then the user did not specify any image extension and it needs to loop through common exts
+                for extension in ['png','jpg','jpeg']:
+                    if not path.exists(mask):
+                        mask = path.join(mask_directory, f'{mask}.{extension}')
+                    else:
+                        continue # Loops until it ends if it found valid mask path
+        if not path.exists(mask): # Then even if we did some checks to convert to absolute path it still does not exists
+            raise vs.Error(f"The Mask filepath you provided does not exist: {mask}")
+        rmask = core.ffms2.Source(mask)
+        video = core.std.MaskedMerge(
+           clipa=original,
+           clipb=video,
+           mask=rmask.std.Minimum().std.Minimum().std.Minimum().std.Minimum().std.BoxBlur(vradius = 6,vpasses = 2,hradius = 6,hpasses = 2),
+           first_plane=True
+           )
+        # verb(f'Using mask {mask}')
+        # filtered = video.std.Expr(expr=['x 0 -','',''])
+        # GW = core.ffms2.Source(mask, cache=False)
+        # BW = GW.resize.Bicubic(video.width,video.height, matrix_s='709',format=vs.GRAY8)
+        # BW = BW.std.Levels( min_in=0, max_in=235, gamma =0.05, min_out=0, max_out=255)
+        # video = havsfunc.Overlay(original, filtered, mask=BW)
 
 video.set_output()
