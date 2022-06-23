@@ -1,4 +1,3 @@
-[]
 from sys import argv, exit
 from os import path, system, listdir, get_terminal_size, environ
 from helpers import *
@@ -27,7 +26,7 @@ def voidargs(args):
             exit(0)
 
     if args.recipe:
-        recipe = path.abspath(path.join(path.dirname(argv[0]), "settings/recipe.ini"))
+        recipe = path.abspath(path.join(path.dirname(argv[0]), "settings/recipe.yaml"))
         if path.exists(recipe) == False:
             print(f"Looking for recipe path {recipe}")
             print("recipe (config) path does not exist (are you messing with files?), exitting..")
@@ -79,7 +78,7 @@ def runvpy(parser):
             filetypes= (("Video files", "*.mp4 *.mkv *.webm *.avi"),
                         ("All files", "*.*"))
         )
-        if file_path == '': exit(1)
+        if file_path in [None,'']: exit(1)
         if not args.input: args.input = []
         for vid in file_path: args.input.append(vid)
     else:
@@ -143,7 +142,9 @@ def runvpy(parser):
         conf['encoding']['args'] = EncPresets[std][enc] # This makes use of the EncPresets dictionary declared above
         if 'Upscale' in passedArgs or '4K' in passedArgs: conf['encoding']['args'] += ' -vf zscale=3840:2160:f=point'
     
-    for video in videos: # This loop ONLY converts all paths to literal, the actual for loop that does all the process is later down
+    for i in videos: # This loop ONLY converts all paths to literal, the actual for loop that does all the process is later down
+        i =- 1
+        video = videos[i]
         if type(video) is not str: video = video['filename']
         if '*' in video: # If filepath contains wildcard, resolve them
             for file in resolve(video):
@@ -198,7 +199,9 @@ def runvpy(parser):
     #     exit(0)
 
     iterations = 0
-    for video in videos: # Second loop, now that videos have been expanded
+    for i in range(len(videos)): # Second loop, now that videos have been expanded
+        #i =- 1
+        video = videos[i]
         if type(video) is dict: 
             trims = video
             video = video['filename']
@@ -216,10 +219,21 @@ def runvpy(parser):
                 title = f'[{iterations}/{len(videos)}] ' + title
             system(f"title {title}")
         
-        flavors = [
+        if conf['misc']['suffix'] == 'fruits':
+            suffix = choice([
             'Berry','Cherry','Cranberry','Coconut','Kiwi','Avocado','Durian','Lemon','Lime','Fig','Mirabelle',
             'Peach','Apricot','Grape','Melon','Papaya','Banana','Apple','Pear','Orange','Mango','Plum','Pitaya'
-        ] if str(conf['misc']['flavors']) in [yes,'fruits'] else ['Smoothie']
+        ])
+        elif conf['misc']['suffix'] == 'detailed':
+            suffix = ''
+            if conf['interpolation']['enabled']:
+                suffix += f"{conf['interpolation']['fps']}fps"
+            if conf['frame blending']['enabled']:
+                suffix += f" ({conf['frame blending']['fps']}, {float(conf['frame blending']['intensity'])}"
+            if conf['flowblur']['enabled']:
+                suffix += f", bf@{conf['flowblur']['amount']}"
+            if "(" in suffix: suffix += ")"
+            
 
         if args.outdir:
             if args.outdir == '': # User simply specified the argument, but didn't give a value, so it defaults to current working directory
@@ -240,12 +254,14 @@ def runvpy(parser):
             ext = cont if cont.startswith('.') else f'.{cont}'
         
         filename = path.splitext(path.basename(video))[0]
+        if conf['misc']['prefix']:
+            filename = f'{conf["misc"]["prefix"]}{filename}'
 
-        out = path.join(outdir, f'{filename} - {choice(flavors)}{ext}')
+        out = path.join(outdir, f'{filename} ~ {suffix}{ext}')
 
         count=2
         while path.exists(out):
-            out = path.join(outdir, f'{filename} - {choice(flavors)} ({count}){ext}')
+            out = path.join(outdir, f'{filename} ~ {suffix} ({count}){ext}')
             count+=1
         
         if args.output:
@@ -288,6 +304,20 @@ def runvpy(parser):
             command[1] = conf['misc']['mpv bin'] + ' -'
         elif 'start' in trims.keys() and 'fin' in trims.keys(): # If they're both in here
             s, e = trims['start'], trims['fin']
+            args.padding = True
+            if args.padding and videos[i] != videos[-1]:
+                if video == videos[i+1]['filename']:
+                    print(f"{get_sec(videos[i+1]['start'])} minus {get_sec(videos[i]['fin'])}")
+                    diff = (get_sec(videos[i+1]['start']) - get_sec(videos[i]['fin']))
+                    if conf['frame blending']['enabled'] in yes:
+                        print(f"used to be {diff}")
+                        diff = round(diff / fps(video), 3)
+                        print(f"now it be {diff}")
+
+                    if '-vf' in conf['encoding']['args']:
+                        command[1] = command[1].replace('-vf ', f'-vf tpad=stop_duration={diff},')
+                    else:
+                        command[1] += f'-vf tpad=stop_duration={diff} '
              
             if s>e:
                 print(f"Trimming point {s} to {e} on video {video} is invalid: end before start??")
@@ -312,12 +342,12 @@ def runvpy(parser):
 
         if 'ffmpeg' in command[1]:
             # This will force the output video's color range to be Full
-            range = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{video}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
-            if range.stdout == 'pc\n':
+            range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{video}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            if range_proc.stdout == 'pc\n':
                 if '-vf ' in command[1]:
                     command[1] = command[1].replace('-vf ','-vf scale=in_range=full:out_range=full,') # Very clever video filters appending
                 else:
-                    command[1] += ' -vf scale=in_range=full:out_range=full'
+                    command[1] += ' -vf scale=in_range=full:out_range=full '
 
         if args.verbose:
             for cmd in command: print(f"{cmd}\n")
@@ -328,7 +358,7 @@ def runvpy(parser):
         else:
             log = Bar(command, video)
             if (log):
-                SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,720,0)
+                if args.cui: SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,720,0)
                 print(command)
                 print("")
                 print(conf)
@@ -344,3 +374,9 @@ def runvpy(parser):
             print(f"\033[u\033[0J✅ Finished rendering {len(videos)} videos", end='\r')
         else:
             print(f"\033[u\033[?25h", end='\r')
+
+    if conf['misc']['ding after'] <= len(videos):
+        ding = r"C:\Windows\Media\ding.wav" # Modify that linux users :yum:
+        ffplay = 'ffplay'
+        if path.exists(r"C:\Windows\Media\ding.wav"):
+            _ = subprocess.run(f'"{ffplay}" "{ding}" -volume 20 -autoexit -showmode 0 -loglevel quiet', shell=True)
