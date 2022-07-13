@@ -10,7 +10,7 @@ At the moment, you can only use the UI, if you have installed Smoothie via 🥄 
 
 ### Platforms
 - [x] Windows
-- [ ] Linux
+- [x] Linux
 
 ## Requirements
 Smoothie's 🐍 Python runtime/installation should ship with the following PIP packages.   
