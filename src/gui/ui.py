@@ -76,7 +76,6 @@ def start():
                     add_input_text(label='MPV', tag='mpv bin')
                     add_input_int(label='Ding', tag='ding after',
                                   width=default_width)
-            
 
     init(f"{path.dirname(__file__)}/../../settings/recipe.yaml")
     create_viewport(title='Smoothie GUI', width=800, height=600)
