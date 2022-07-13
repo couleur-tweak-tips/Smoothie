@@ -1,4 +1,5 @@
-from functions import config, init, get_scoop_dir
+from functions import config, init
+from os import path
 from dearpygui.dearpygui import *
 
 def start():
@@ -77,7 +78,7 @@ def start():
                                   width=default_width)
             
 
-    init(fr"{get_scoop_dir()}\apps\smoothie\current\Smoothie\settings\recipe.yaml")
+    init(f"{path.dirname(__file__)}/../../settings/recipe.yaml")
     create_viewport(title='Smoothie GUI', width=800, height=600)
     set_viewport_resizable(False)
     setup_dearpygui()

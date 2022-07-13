@@ -1,5 +1,6 @@
 from dearpygui.dearpygui import get_value, set_value
 from confparse import interpolation, frame_blending, misc, timescale, flowblur, encoding
+from os import path
 from yaml import safe_load, safe_dump
 from values import recipe, config_values, elements_values
 from subprocess import run
@@ -30,6 +31,6 @@ def init(recipe: str):
 class config:
     def write():
         config = recipe.format(**config_values(get_value))
-        with open(fr"{get_scoop_dir()}\apps\smoothie\current\Smoothie\settings\recipe.yaml", 'w') as f:
+        with open(f"{path.dirname(__file__)}/../../settings/recipe.yaml", 'w') as f:
             f.write(safe_dump(safe_load(config), sort_keys=False))
         showinfo('Recipe Made!', 'Your recipe has been made!')
