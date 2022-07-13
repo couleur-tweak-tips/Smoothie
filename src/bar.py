@@ -1,10 +1,8 @@
 import subprocess
 import PyTaskbar
-from subprocess import Popen, run, PIPE 
-from os import get_terminal_size, environ, path
-from json import loads
+from subprocess import Popen
+from os import get_terminal_size, path
 from helpers import *
-import sys
 from textformat import *
 
 def get_length(file_path:str):

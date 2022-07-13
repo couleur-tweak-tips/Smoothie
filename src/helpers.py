@@ -1,10 +1,10 @@
 from getpass import getpass
 from json import loads
-from sys import exit, stdin
+from sys import exit
 from subprocess import run, PIPE
 from re import search
 from platform import architecture, system as ossystem
-from os import system, environ
+from os import environ
 from math import floor
 
 global isWT

@@ -23,6 +23,7 @@ parser.add_argument("-cui",             help=" Make terminal stay on top moved o
 parser.add_argument("-tonull",          help=" Redirect VS' Y4M output to NULL (for debugging)",action="store_true",                                       )
 parser.add_argument("-tompv",           help=" Redirect VS' Y4M output to MPV  (for debugging)",action="store_true",                                       )
 parser.add_argument("-override",        help=" Override a recipe value e.g: category;key;value",action="store",       nargs="+", metavar='PATH',   type=str)
+parser.add_argument("-gui",             help="Show the Smoothie GUI.",                          action="store_true"                                        )
 
 
 exec.runvpy(parser)
