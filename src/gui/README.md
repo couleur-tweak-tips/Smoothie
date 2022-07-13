@@ -1,7 +1,6 @@
 # Smoothie GUI
-
 This is the UI frontend for Smoothie.
-At the moment, you can only use the UI, if you have installed Smoothie via 🥄 Scoop.
+
 
 ### Features
 1. GUI to edit Smoothie's master recipe.
