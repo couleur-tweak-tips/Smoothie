@@ -15,17 +15,19 @@ flowblur:
   amount: 100
   mask: None
 encoding:
-  process: ffmpeg.exe
+  process: ffmpeg
   args: H264 CPU
 misc:
   mpv bin: mpv
   stay on top: true
   verbose: false
-  ding after: 0
-  folder: None
-  container: .mkv
-  flavors: fruits
-  dedupthreshold: 0.0
+  ding after: 1
+  folder: 
+  container: .MP4
+  prefix: 
+  suffix: detailed
+  dedupthreshold: 0
+
 timescale:
   in: 1.0
   out: 1.0

@@ -54,18 +54,20 @@ def pause():
     getpass('Press enter to continue..')
 
 # Bool aliases
-yes = ['True','true','yes','y','1',1]
-no = ['False','false','no','n','0',0,'null','',None]
+yes = ['True','true','yes','y','1', True]
+no = ['False','false','no','n','0','null','',None, False]
 
-def get_sec(time_str):
-    if type(time_str) is str:
-        if '.' in time_str:
-            spare = float("0." + time_str.split('.')[1])
-    else: spare = 0
-    if type(time_str) is list: time_str = time_str[0]
-    if type(time_str) is str:
-        if '.' in time_str: time_str = time_str.split('.')[0]
-        if search('[a-zA-Z]', time_str) is not None:
-            raise Exception(f'Timecode to trim contains a letter: {time_str}')
+def get_sec(timecode):
+    if type(timecode) is str:
+        if '.' in timecode:
+            spare = float("0." + timecode.split('.')[1])
+            timecode = timecode.split('.')[0]
+    elif isinstance(timecode, (float, int)):
+        return timecode
+    if type(timecode) is list: timecode = timecode[0]
+    if type(timecode) is str:
+        if search('[a-zA-Z]', timecode) is not None:
+            raise Exception(f'Timecode to trim contains a letter: {timecode}')
+    if 'spare' not in locals(): spare = 0
     # god bless https://stackoverflow.com/a/6402934
-    return sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(time_str).split(':')))) + spare
+    return sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(timecode).split(':')))) + spare

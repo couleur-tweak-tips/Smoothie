@@ -1,34 +1,22 @@
 from os import path
-import sys
-sys.path.append(path.curdir)
+from sys import path as envpath
+envpath.append(path.dirname(__file__))
+from helpers import *
 import vapoursynth as vs
 from vapoursynth import core
-from configparser import ConfigParser
 import havsfunc
-from re import search
 from ast import literal_eval
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
-# Bool aliases
-yes = ['True','true','yes','y','1', True]
-no = ['False','false','no','n','0','null','',None, False]
-
-
-def defined(var):
-    # variable to test must be provided as a string
-    # e.g testing the variable var would need to be defined('var'), not defined(var)
-    try:
-        eval(var)
-    except NameError:
-        return False
-    else:
-        return True
-
-global conf
-conf = eval(config)
-print(logging.debug(conf['misc']['verbose'] == True))
-
+try:
+    global conf
+    conf = eval(config)
+except NameError:
+    raise vs.Error("Failed to load recipe (was it declared with VSPipe?)")
+except SyntaxError:
+    raise Exception(f"Failed to parse passed the JSON recipe: \n\n{config}")
+    
 def verb(msg):
     if conf['misc']['verbose'] == True:
         print(logging.debug(f' {msg}'))
@@ -37,22 +25,22 @@ def verb(msg):
 if path.splitext(input_video)[1] == '.avi':
     video = core.avisource.AVISource(input_video)
     video = core.fmtc.matrix(clip=video, mat="709", col_fam=vs.YUV, bits=16)
-    # If you're gonna bother working with .AVI you're probably using 709 anyways
-    # (let me know of one valid case to use this container as input)
+        # If you're gonna bother working with .AVI you're probably using 709 anyways
+        # (let me know of one valid case to use this container as input)
     video = core.fmtc.resampling(clip=video, css="420")
     video = core.fmtc.bitdepth(clip=video, bits=8)
 else:
     video = core.ffms2.Source(source=input_video, cache=False)
-
-if '__TEMP' in conf.keys():
+    
+if 'start' and 'end' in conf['TEMP'].keys():
         
     fps = round(eval(str(video.fps))) # Converts str '1000000/3571' to int 280
-    start, end = conf['__TEMP']['start'], conf['__TEMP']['end']
+    start, end = conf['TEMP']['start'], conf['TEMP']['end']
     
     verb(f'Trimming {start} to {end} with fps {fps}')
     video = core.std.Trim(video, start, end)
     verb(f'Finished cutting trim from {start} to {end}')
-    
+
 if float(conf['timescale']['in']) != 1: # Input timescale, done before interpolation
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * (1 / float(conf['timescale']['in']))))
 
@@ -69,7 +57,7 @@ if str(conf['interpolation']['enabled']).lower() in yes: # Interpolation using I
          Preset=str(conf['interpolation']['speed']),
          Tuning=str(conf['interpolation']['tuning']),
          OverrideAlgo=int(conf['interpolation']['algorithm'])
-    )
+     )
     
 if float(conf['timescale']['out']) != 1: # Output timescale, done after interpolation
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * float(conf['timescale']['out'])))
@@ -85,6 +73,8 @@ if str(conf['frame blending']['enabled']).lower() in yes:
 
     import weighting
     repartition = conf['frame blending']['weighting']
+    if type(repartition) is str:
+        partition = repartition.lower()
 
     frame_gap = int(video.fps / int(conf['frame blending']['fps']))
     blended_frames = int(frame_gap * float(conf['frame blending']['intensity']))
@@ -101,7 +91,8 @@ if str(conf['frame blending']['enabled']).lower() in yes:
 
     args = {'frames': blended_frames}
 
-    if repartition in ['gaussian','gauss','gaussianSym','gaussSym']:
+    # shout out yandere dev for the inspiration 
+    if repartition in ['gaussian','gauss','gaussiansym','gausssym','gaussian_sym']:
         if argcount >= 1:
             args['standard_deviation'] = int(adv[0])
         if argcount >= 2:
@@ -109,9 +100,7 @@ if str(conf['frame blending']['enabled']).lower() in yes:
         if repartition in ['gaussian','gauss']:
             weights = weighting.gaussian(**args)
         else:
-            weights = weighting.gaussianSym(**args)
-    elif repartition == ['gaussianSym','gaussSym']:
-        weighting.gaussianSym(blended_frames)
+            weights = weighting.gaussiansym(**args)
     elif repartition == 'custom':
         args['func'] = adv[0]
         if argcount >= 2:
