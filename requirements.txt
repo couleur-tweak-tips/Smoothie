@@ -1,9 +1,15 @@
+# Installing Smoothie from Scoop is recommended for people that don't want to tinkerer
+
+# frontend
+dearpygui
+yaspin # Spinner while video gets indexed
+PyTaskbarProgress # Progress bar for conhost
+
+# backend
 pywin32 # Useful for Windows only, comment this out if you on *nix
-tkinter # Used for filedropper
+tkinter # Used for file selector on Windows (would be very cool on linux too °O°?)
 vapoursynth==R54
 pyyaml # YAML config
 
-yaspin # Spinner while video gets indexed
 
-PyTaskbarProgress # Progress bar for conhost
 
