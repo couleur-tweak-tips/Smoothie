@@ -21,7 +21,7 @@ flowblur:
   mask:
 
 encoding:
-  process: ffmpeg.exe
+  process: ffmpeg
   args: H264 CPU
 
 misc:
