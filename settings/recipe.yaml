@@ -4,7 +4,6 @@
 interpolation:
   enabled: yes
   fps: 480
-  mask: weak
   speed: medium
   tuning: weak
   algorithm: 23
@@ -31,8 +30,9 @@ misc:
   verbose: false
   ding after: 1
   folder: 
-  container: .MKV
-  flavors: fruits
+  container: .MP4
+  prefix: 
+  suffix: detailed
   dedupthreshold: 0
 
 timescale:
