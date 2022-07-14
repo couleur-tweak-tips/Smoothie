@@ -45,13 +45,7 @@ def voidargs(args):
 def runvpy(parser):
     
     args = parser.parse_args()
-    # This is done in order to be "directory agnostic"
-    # Just read it as, if I'm in a folder called src, do cd ..
-    parent, dir = path.split( path.split(path.abspath(argv[0]))[0] )
-    if dir == 'src':
-        step = path.join(parent, path.basename(argv[0]))
-        if args.verbose: print(f'Stepping down from {argv[0]} to {step}')
-        argv[0] = step
+
     voidargs(args)
     
     if args.override:
@@ -85,7 +79,7 @@ def runvpy(parser):
         videos = args.input
     
     if args.config: config_filepath = path.abspath(args.config)
-    else: config_filepath = path.abspath(path.join(path.dirname(argv[0]), "settings/recipe.yaml"))
+    else: config_filepath = path.abspath(path.join(path.dirname(path.dirname(argv[0])), "settings/recipe.yaml"))
 
     with open(config_filepath, 'r') as file:
         conf = safe_load(file)
@@ -98,7 +92,7 @@ def runvpy(parser):
         exit(1)     
 
         
-    mask_directory = path.abspath(path.join(path.dirname(argv[0]), "masks"))
+    mask_directory = path.abspath(path.join(path.dirname(path.dirname(argv[0])), "masks"))
     if not path.exists(mask_directory):
         print(f"mask folder does not exist, exitting (looked for {mask_directory})")
         pause(); exit()
@@ -131,7 +125,7 @@ def runvpy(parser):
     for arg in passedArgs: # No maidens nor cases
         if arg in ['NV','NVENC','NVIDIA']: enc = 'NVENC'
         if arg in ['AMD','AMF']:           enc = 'AMF'
-        if arg in ['Intel','QuickSync']:   enc = 'QuickSync'
+        if arg in ['Intel','QuickSync','QSV']:   enc = 'QuickSync'
         if arg == 'CPU':                   enc = 'CPU'
         if arg == 'x264':                  enc = 'CPU'; std = 'H264'
         if arg == 'x265':                  enc = 'CPU'; std = 'H265'
@@ -197,6 +191,8 @@ def runvpy(parser):
     #             raise Exception(f'Failed to trim video with command {cmd}')
 
     #     exit(0)
+    
+    conf['TEMP'] = {}
 
     iterations = 0
     for i in range(len(videos)): # Second loop, now that videos have been expanded
@@ -233,6 +229,7 @@ def runvpy(parser):
             if conf['flowblur']['enabled']:
                 suffix += f", bf@{conf['flowblur']['amount']}"
             if "(" in suffix: suffix += ")"
+            suffix += ' '
             
 
         if args.outdir:
@@ -257,19 +254,18 @@ def runvpy(parser):
         if conf['misc']['prefix']:
             filename = f'{conf["misc"]["prefix"]}{filename}'
 
-        out = path.join(outdir, f'{filename} ~ {suffix}{ext}')
+        if args.output and len(videos) == 1:
+            out = args.output
+        elif not args.output:
+            out = path.join(outdir, f'{filename} ~ {suffix}{ext}')
 
-        count=2
-        while path.exists(out):
-            out = path.join(outdir, f'{filename} ~ {suffix} ({count}){ext}')
-            count+=1
-        
-        if args.output:
-            if ((type(args.input) is list) and (len(args.input) == 1)):
-                out = args.output[0]
+            count=2
+            while path.exists(out):
+                out = path.join(outdir, f'{filename} ~ {suffix}({count}){ext}')
+                count+=1
                                
         if isWin:
-            vspipe = path.join(path.dirname(path.dirname(argv[0])),'VapourSynth','VSPipe.exe')
+            vspipe = path.join(path.dirname(path.dirname(path.dirname(argv[0]))),'VapourSynth','VSPipe.exe')
         elif isLinux:
             vspipe = 'vspipe'
                     
@@ -302,33 +298,18 @@ def runvpy(parser):
             conf['misc']['verbose'] = True
             command[0] += f' --arg config="{conf}"'
             command[1] = conf['misc']['mpv bin'] + ' -'
+        
         elif 'start' in trims.keys() and 'fin' in trims.keys(): # If they're both in here
-            s, e = trims['start'], trims['fin']
-            args.padding = True
-            if args.padding and videos[i] != videos[-1]:
-                if video == videos[i+1]['filename']:
-                    print(f"{get_sec(videos[i+1]['start'])} minus {get_sec(videos[i]['fin'])}")
-                    diff = (get_sec(videos[i+1]['start']) - get_sec(videos[i]['fin']))
-                    if conf['frame blending']['enabled'] in yes:
-                        print(f"used to be {diff}")
-                        diff = round(diff / fps(video), 3)
-                        print(f"now it be {diff}")
-
-                    if '-vf' in conf['encoding']['args']:
-                        command[1] = command[1].replace('-vf ', f'-vf tpad=stop_duration={diff},')
-                    else:
-                        command[1] += f'-vf tpad=stop_duration={diff} '
-             
+            s, e = trims['start'], trims['fin']        
             if s>e:
                 print(f"Trimming point {s} to {e} on video {video} is invalid: end before start??")
                 continue
             elif e==s:
                 print(f"Trimming point {s} to {e} on video {video} is invalid start and end are the same??")
                 continue
-
-            conf['__TEMP'] = {}
-            conf['__TEMP']['start'] = s
-            conf['__TEMP']['end'] = e
+            
+            conf['TEMP']['start'] = s
+            conf['TEMP']['end'] = e
             command[0] += f' --arg config="{conf}"'
             command[1] += f'{conf["encoding"]["args"]} "{out}"' # No audio since it's desynced and cba
         elif 'start' in trims.keys() or 'fin' in trims.keys(): # If only one is present
@@ -345,7 +326,7 @@ def runvpy(parser):
             range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{video}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
             if range_proc.stdout == 'pc\n':
                 if '-vf ' in command[1]:
-                    command[1] = command[1].replace('-vf ','-vf scale=in_range=full:out_range=full,') # Very clever video filters appending
+                    command[1] = command[1].replace('-vf ','-vf scale=in_range=full:out_range=limited,') # Very clever video filters appending
                 else:
                     command[1] += ' -vf scale=in_range=full:out_range=full '
 
@@ -359,7 +340,7 @@ def runvpy(parser):
             log = Bar(command, video)
             if (log):
                 if args.cui: SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,720,0)
-                print(command)
+                print(' '.join(command))
                 print("")
                 print(conf)
                 print(''.join(log))
