@@ -1,10 +1,10 @@
 from sys import argv, exit
 from os import path, system, listdir, get_terminal_size, environ
+from gui.main import main as gui_main
 from helpers import *
 from bar import * # Progress bar
 from glob import glob as resolve
 from random import choice # Randomize smoothie's flavor
-from configparser import ConfigParser
 from subprocess import run, Popen
 from yaml import safe_load
 
@@ -48,6 +48,9 @@ def runvpy(parser):
 
     voidargs(args)
     
+    if args.gui:
+        gui_main()
+
     if args.override:
         for override in args.override:
             category, key, value = override.split(';').split(';')

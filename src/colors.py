@@ -1,8 +1,4 @@
-from re import findall
-from os import system
-
-def prep():
-    system('')
+from os import system; system('')
 
 # & == method
 # @ == foreground
