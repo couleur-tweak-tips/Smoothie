@@ -1,5 +1,6 @@
 yes = ['true', 'yes', 'y', '1']
-no = [ 'false', 'no', 'n', '0', 'null', '', None]
+no = ['false', 'no', 'n', '0', 'null', '', None]
+
 
 class interpolation:
     def __init__(self, config) -> None:
@@ -41,10 +42,11 @@ class interpolation:
 
     def algo(self):
         algo = int(self.ip['algorithm'])
-        if algo not in [1, 2, 11, 13, 22, 23]:
+        if algo not in [1, 2, 10, 11, 13, 21, 23]:
             return '23'
         else:
             return str(algo)
+
 
 class frame_blending:
     def __init__(self, config) -> None:
@@ -78,6 +80,7 @@ class frame_blending:
             return ' '.join([word.capitalize()
                              for word in weighting.replace('_', ' ').split(' ')])
 
+
 class flowblur():
     def __init__(self, config):
         self.flblur = config['flowblur']
@@ -88,21 +91,23 @@ class flowblur():
         else:
             return False
 
-    def amount(self): 
+    def amount(self):
         return int(self.flblur['amount'])
 
-    def mask(self): 
+    def mask(self):
         return self.flblur['mask']
+
 
 class encoding:
     def __init__(self, config):
         self.enc = config['encoding']
 
-    def process(self): 
+    def process(self):
         return self.enc['process']
 
-    def args(self): 
-        return self.enc['args']    
+    def args(self):
+        return self.enc['args']
+
 
 class misc:
     def __init__(self, config):
@@ -137,6 +142,7 @@ class misc:
             return True
         else:
             return False
+
 
 class timescale:
     def __init__(self, config):

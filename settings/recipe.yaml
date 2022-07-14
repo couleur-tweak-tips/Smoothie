@@ -1,40 +1,31 @@
-# This is the recipe (config) for making a delicious smoothie ;p
-# Learn how it can be fine-tuned @ https://github.com/couleur-tweak-tips/Smoothie/wiki
-
 interpolation:
-  enabled: yes
+  enabled: true
   fps: 480
-  mask: weak
   speed: medium
   tuning: weak
   algorithm: 23
   gpu: true
-
 frame blending:
-  enabled: yes
+  enabled: true
   fps: 60
-  intensity: 1
+  intensity: 1.2
   weighting: equal
-
 flowblur:
-  enabled: no
+  enabled: false
   amount: 100
-  mask:
-
+  mask: None
 encoding:
   process: ffmpeg.exe
   args: H264 CPU
-
 misc:
   mpv bin: mpv
   stay on top: true
   verbose: false
-  ding after: 1
-  folder: 
-  container: .MKV
+  ding after: 0
+  folder: None
+  container: .mkv
   flavors: fruits
-  dedupthreshold: 0
-
+  dedupthreshold: 0.0
 timescale:
   in: 1.0
   out: 1.0

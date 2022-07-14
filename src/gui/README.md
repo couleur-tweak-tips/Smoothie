@@ -13,7 +13,7 @@ This is the UI frontend for Smoothie.
 
 ## Requirements
 Smoothie's 🐍 Python runtime/installation should ship with the following PIP packages.   
-Install them with your system's 🐍 Python installation if you consider to mess around with the source code.
+Incase on 🐧 Linux, simply install the following PIP packages.
 
 ```bat
 pip install dearpygui pyyaml
