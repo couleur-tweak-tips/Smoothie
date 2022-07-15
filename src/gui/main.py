@@ -1,8 +1,8 @@
 from platform import system
-from ui import start
 from os import _exit, path
 from sys import path as sys_path
 sys_path.append(path.dirname((__file__)))
+from ui import start
 if system() == 'Windows':
     from ctypes import windll
     windll.shcore.SetProcessDpiAwareness(2)
