@@ -48,7 +48,9 @@ def runvpy(parser):
 
     voidargs(args)
     
-    if args.gui:
+    if args.gui is True and args.input is not None:
+        gui_main(args.input)
+    elif args.gui is True and args.input is None:
         gui_main()
 
     if args.override:
@@ -243,7 +245,8 @@ def runvpy(parser):
         elif conf['misc']['folder'] in no: # If no specified output directory in config, use also the input directory as output 
             outdir = path.abspath(path.dirname(video))
         else: # Else finally use conf
-            outdir = conf['misc']['folder']
+            if conf['misc']['folder'] is not None:
+                outdir = conf['misc']['folder']
             
         if args.peek:
             ext = '.png'

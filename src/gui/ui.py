@@ -1,10 +1,10 @@
-from functions import config, init, info
+from functions import config, init, info, sm
 from os import path
 from sys import exit
 from dearpygui.dearpygui import *
 
 
-def start():
+def start(videos = None):
     """
     Start the GUI.
     """
@@ -16,9 +16,28 @@ def start():
             add_button(label='Load', tag='load', callback=config.load)
             add_button(label='About', tag='about', callback=info.about)
             add_button(label='Help', tag='help', callback=info.help)
-            
+        
         with child_window(tag='child', border=False):
             with tab_bar(label='tabbar'):
+
+                with tab(label='General'):
+                    with group(horizontal=True):
+                        add_text('Videos')
+                        add_button(tag='videos_tooltip',
+                                            label='?', height=20, width=20)
+                        with tooltip('videos_tooltip'):
+                                add_text('''Select videos to be processed.
+
+[Select] - Videos to be queued and passed through Smoothie.
+[Clear]  - Clear the queue.
+[Render] - Render the queued videos.''')
+
+                    add_listbox(tag='videos', default_value=None, label='Queue')
+                    with group(horizontal=True):
+                        add_button(label='Select', tag='select', callback=sm.select_videos, height=25, width=50)
+                        add_button(label='Clear', tag='clear', height=25, width=50, callback=sm.clear_queue)
+                        add_button(label='Render', tag='render', height=25, width=50)
+
                 with tab(label='Settings', tag='settings'):
 
                     with collapsing_header(label='Interpolation', default_open=True):
@@ -31,8 +50,13 @@ def start():
                                        min_value=120, max_value=3840)
                         add_text('')
 
-                        add_combo(tag='ip_speed', label="Speed", items=[
-                            'Medium', 'Fast', 'Faster'], width=default_width)
+                        with group(horizontal=True):
+                            add_combo(tag='ip_speed', label="Speed    ", items=[
+                                'Medium', 'Fast', 'Faster'], width=default_width)
+                            add_button(tag='ip_speed_tooltip',
+                                       label='?', height=20, width=20)
+                            with tooltip('ip_speed_tooltip'):
+                                add_text('Select the speed of the interpolation.\nSlower presets yield less artifacts.')
 
                         with group(horizontal=True):
                             add_combo(tag='ip_tuning', label="Tuning   ", items=[
@@ -122,8 +146,9 @@ Weak - Best Accuracy + Least Clarity'''.strip('\n'))
                     add_input_text(label='MPV', tag='mpv bin')
                     add_input_int(label='Ding', tag='ding after',
                                   width=default_width)
-
     init(f"{path.dirname(__file__)}/../../settings/recipe.yaml")
+    if videos is not None:
+        configure_item('videos', items=videos, default_value=videos[0])
     create_viewport(title='Smoothie GUI', width=800, height=600)
     set_viewport_resizable(False)
     setup_dearpygui()

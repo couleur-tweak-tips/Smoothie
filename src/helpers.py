@@ -55,7 +55,7 @@ def pause():
 
 # Bool aliases
 yes = ['True','true','yes','y','1', True]
-no = ['False','false','no','n','0','null','',None, False]
+no = ['False','false','no','n','0','null','',None, False, 'None']
 
 def get_sec(timecode):
     if type(timecode) is str:

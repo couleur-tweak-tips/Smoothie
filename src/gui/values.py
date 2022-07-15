@@ -36,7 +36,7 @@ misc:
 timescale:
   in: {timescale_in}
   out: {timescale_out}
-'''
+'''.strip('\n')
 
 def elements_values(ip, fb, flb, ms, enc, ts): return {
     # Interpolation
@@ -78,7 +78,8 @@ def elements_values(ip, fb, flb, ms, enc, ts): return {
     # Settings
     'verbose': ms.verbose(),
     'stay on top': ms.stay_on_top(),
-    'mpv bin': ms.mpv_bin()}
+    'mpv bin': ms.mpv_bin(),
+    'ding after': ms.ding_after()}
 
 
 def config_values(function): return {

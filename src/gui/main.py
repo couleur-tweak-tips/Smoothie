@@ -10,9 +10,9 @@ if system() == 'Windows':
 # Ensure that the script is running in the path is present in.
 
 
-def main():
+def main(videos = None):
     try:
-        start()
+        start(videos = videos)
     except KeyboardInterrupt:
         _exit(0)
 
