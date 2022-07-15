@@ -29,7 +29,8 @@ misc:
   ding after: {ding_after}
   folder: {folder}
   container: {container}
-  flavors: {flavors}
+  prefix: {prefix}
+  suffix: {suffix}
   dedupthreshold: {deduplthreshold}
 
 timescale:
@@ -67,7 +68,8 @@ def elements_values(ip, fb, flb, ms, enc, ts): return {
     # Video
     'folder': ms.folder(),
     'container': ms.container(),
-    'flavors': ms.flavors(),
+    'prefix': ms.prefix(),
+    'suffix': ms.suffix(),
 
     # Encoding
     'process': enc.process(),
@@ -109,7 +111,8 @@ def config_values(function): return {
     # Output
     'folder': function('folder'),
     'container': function('container'),
-    'flavors': function('flavors').lower(),
+    'prefix': function('prefix').lower(),
+    'suffix': function('suffix').lower(),
 
     'process': function('process'),
     'args': function('args'),

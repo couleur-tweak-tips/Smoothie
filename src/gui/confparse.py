@@ -134,11 +134,22 @@ class misc:
     def deduplthreshold(self):
         return float(self.ms['dedupthreshold'])
 
-    def flavors(self):
-        return self.ms['flavors'].capitalize()
+    def prefix(self):
+        prefix = self.ms['prefix']
+        if prefix != None:
+            return prefix.capitalize()
+        else:
+            return prefix
 
+    def suffix(self):
+        suffix = self.ms['suffix']
+        if suffix != None:
+            return str(suffix).capitalize()
+        else: 
+            return suffix
+        
     def verbose(self):
-        if self.ms['verbose'] in yes:
+        if str(self.ms['verbose']).lower() in yes:
             return True
         else:
             return False

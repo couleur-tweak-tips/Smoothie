@@ -108,8 +108,8 @@ Weak - Best Accuracy + Least Clarity'''.strip('\n'))
                     add_input_text(tag='folder', label='Output Folder')
                     add_input_text(tag='container',
                                    label='Container', width=default_width)
-                    add_combo(tag='flavors', label='Flavors',
-                              items=['Fruits', 'Smoothie'], width=default_width)
+                    add_input_text(tag='prefix', label='Prefix', width=default_width)
+                    add_input_text(tag='suffix', label='Suffix', width=default_width)
 
                     add_separator()
                     add_text('Encoding')
