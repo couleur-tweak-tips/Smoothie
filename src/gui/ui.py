@@ -20,7 +20,7 @@ def start(videos = None):
         with child_window(tag='child', border=False):
             with tab_bar(label='tabbar'):
 
-                with tab(label='General'):
+                with tab(label='General', tag='general'):
                     with group(horizontal=True):
                         add_text('Videos')
                         add_button(tag='videos_tooltip',
@@ -146,6 +146,8 @@ Weak - Best Accuracy + Least Clarity'''.strip('\n'))
                     add_input_text(label='MPV', tag='mpv bin')
                     add_input_int(label='Ding', tag='ding after',
                                   width=default_width)
+            hide_item('general')
+
     init(f"{path.dirname(__file__)}/../../settings/recipe.yaml")
     if videos is not None:
         configure_item('videos', items=videos, default_value=videos[0])
