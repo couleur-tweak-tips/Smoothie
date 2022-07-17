@@ -29,13 +29,14 @@ misc:
   ding after: {ding_after}
   folder: {folder}
   container: {container}
-  flavors: {flavors}
+  prefix: {prefix}
+  suffix: {suffix}
   dedupthreshold: {deduplthreshold}
 
 timescale:
   in: {timescale_in}
   out: {timescale_out}
-'''
+'''.strip('\n')
 
 def elements_values(ip, fb, flb, ms, enc, ts): return {
     # Interpolation
@@ -67,7 +68,8 @@ def elements_values(ip, fb, flb, ms, enc, ts): return {
     # Video
     'folder': ms.folder(),
     'container': ms.container(),
-    'flavors': ms.flavors(),
+    'prefix': ms.prefix(),
+    'suffix': ms.suffix(),
 
     # Encoding
     'process': enc.process(),
@@ -76,7 +78,8 @@ def elements_values(ip, fb, flb, ms, enc, ts): return {
     # Settings
     'verbose': ms.verbose(),
     'stay on top': ms.stay_on_top(),
-    'mpv bin': ms.mpv_bin()}
+    'mpv bin': ms.mpv_bin(),
+    'ding after': ms.ding_after()}
 
 
 def config_values(function): return {
@@ -109,7 +112,8 @@ def config_values(function): return {
     # Output
     'folder': function('folder'),
     'container': function('container'),
-    'flavors': function('flavors').lower(),
+    'prefix': function('prefix').lower(),
+    'suffix': function('suffix').lower(),
 
     'process': function('process'),
     'args': function('args'),

@@ -1,8 +1,8 @@
 from platform import system
-from ui import start
 from os import _exit, path
 from sys import path as sys_path
 sys_path.append(path.dirname((__file__)))
+from ui import start
 if system() == 'Windows':
     from ctypes import windll
     windll.shcore.SetProcessDpiAwareness(2)
@@ -10,9 +10,9 @@ if system() == 'Windows':
 # Ensure that the script is running in the path is present in.
 
 
-def main():
+def main(videos = None):
     try:
-        start()
+        start(videos = videos)
     except KeyboardInterrupt:
         _exit(0)
 
