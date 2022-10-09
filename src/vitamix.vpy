@@ -1,10 +1,14 @@
-from os import path
-from sys import path as envpath
-envpath.append(path.dirname(__file__))
-from helpers import *
 import vapoursynth as vs
 from vapoursynth import core
-import havsfunc
+
+# From current directory
+from os import path
+from sys import path as envpath
+if path.dirname(__file__) not in envpath: # Not by default
+    envpath.append(path.dirname(__file__)) 
+from helpers import *
+from plugins import filldrops, weighting, havsfunc, adjust
+
 from ast import literal_eval
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -63,7 +67,7 @@ if float(conf['timescale']['out']) != 1: # Output timescale, done after interpol
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * float(conf['timescale']['out'])))
 
 if conf['misc']['dedupthreshold'] not in no:
-    import filldrops
+    from plugins import filldrops
     video = filldrops.FillDrops(
         video,
         thresh = float((conf['misc']['dedupthreshold']))
@@ -71,7 +75,7 @@ if conf['misc']['dedupthreshold'] not in no:
 
 if str(conf['frame blending']['enabled']).lower() in yes:
 
-    import weighting
+    from plugins import weighting
     repartition = conf['frame blending']['weighting']
     if type(repartition) is str:
         partition = repartition.lower()
