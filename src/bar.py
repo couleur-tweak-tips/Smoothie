@@ -3,7 +3,6 @@ import PyTaskbar
 from subprocess import Popen
 from os import get_terminal_size, path
 from helpers import *
-from textformat import *
 
 def get_length(file_path:str):
     stream = probe(file_path)[1]['streams'][0]
