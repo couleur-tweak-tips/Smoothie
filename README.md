@@ -1,105 +1,81 @@
 
 # 🧋 Smoothie [WIP]
 
-Smoothie is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritten in Python with a focus on ease of use and integration in your existing routine.
+Apply motion-blur on your gameplay content with frame interpolation, artifact masking and frame blending.
+> It is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritten in Python with a focus on ease of use and integration in your existing routine.
 
 
 ### 5 ways to feed your videos to Smoothie:
-* MPV Trimmer (most recommended)
-* Dead simple open file dialog when launching it from Start
-* Send To (accepts multiple input)
-* `sm` on the command line
-* Pre-Renderer integration to your NLE
+* Launching Smoothie from the start menu
+* Send To in the Explorer ([example](https://i.imgur.com/MnyYgfr.mp4))
+* `sm` on the command line, see it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki)
+* MPV Trimmer
+* One-button script to render and replace videos in your NLE `WIP`
 
+### Differences compared to blur:
 ```diff
-- Preview (just set extension to .MKV and play unfinished video)
-+ Pretty YAML config
+- Preview (Set container to .MKV and play unrendered video)
++ Static YAML config
 + Unique config instead of per folder (set up like this per default, see --config in CLI)
 + Cross-platform (tested on Arch, Ubuntu & Windows)
 + Completely portable and automated installation via Scoop
-+ FlowBlur (RSMB-like motion blur)
++ FlowBlur (RSMB-like motion blur) with artifact masking (see /masks/)
 + MPV Trimmer ingration (great alternative to LosslessCut)
-+ 
 ```
-
-
-<details>
-<summary> It also has a simplified configuration, here called a "recipe" ;) </summary>
-
-> Learn what each setting does on it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki/Configuring-Smoothie-(recipe))
-
-```ini
-[interpolation] # Tries to guess frames in between existing ones to increase FPS
-enabled=yes # If you want to interpolate or not
-fps=960 # The FPS you wish to interpolate to
-speed=medium # What accuracy you want (fast, faster and fastest will take less time, but make worse frames)
-tuning=weak # This and 'algorithm' are different ways to make interpolation, check the wiki
-algorithm=23
-gpu=yes # GPU acceleration
-
-[frame blending] # Converts high FPS footage (e.g 240, 960) to a lower frame rate (e.g 30, 60 for YT) with motion blur
-enabled=yes # If you want want it to frame blend or not
-fps=60 # The FPS you want it blended down to
-intensity=1.27 # 1.0 is what you're used to, more will make a longer kind of "ghoserfz", I love 1.5 @ 60FPS
-weighting=equal # How each blur frame's opacity is decided (default is every one of them is equal)
-
-[encoding]
-process=ffmpeg # ffmpeg binary name
-args=-c:v libx264 -preset slow -crf 15 # You can even add -vf to add any FFmpeg filter!
-
-[misc]
-folder= # Override all output videos to a specific folder
-deduplication=y # Frame deduplication (useful if you have a tiny little bit of encoding lag)
-container=.mp4 # Set this to .MKV to be able to watch the video before it even finishes rendering!
-flavors=fruits # Set the value to nothing if you want your rendered suffixes to be '- Smoothie.ext'
-
-[timescale] # Set the speed in/out
-in=1
-out=1
-```
-</details>
-
 
 ## Installation
 
-### Windows
 To install Smoothie and its dependencies for Windows, run this install script command anywhere:
 
 ```powershell
-powershell "irm smoothie.ctt.cx|iex"
+powershell -noe iex(irm tl.ctt.cx);Get Smoothie
 ```
-### Linux
+🐧 See for Linux [here](https://github.com/couleur-tweak-tips/Smoothie/wiki)
 
+## Configuring Smoothie
 
-For Linux users and those who seek for a manual installation/already have a Python 3.9/VapourSynth, check the [wiki](https://github.com/couleur-tweak-tips/Smoothie/wiki)
-
-## Using Smoothie
-You can simply select one multiple videos and right click and of them -> Send To -> Smoothie
-
-using Smoothie from the command line:
-
-``sm "D:\Video\input1.mp4" "D:\Video\input2.mp4" ...``
-    Simply give in the path of the videos you wish to queue to smoothie
-
-``sm myrecipe.ini "D:\Video\input1.mp4" "D:\Video\input2.mp4" ...``
-    You can also make the first argument be your custom config file's name, it'll look for it in the settings folder
-
-A lot more ways to use it via the CLI are available on the [wiki](https://github.com/couleur-tweak-tips/Smoothie/wiki)
+The default recipe can be opened from the Run dialog (Windows+R):
+![](https://i.imgur.com/P337omt.png)
 
 
 <details>
-<summary>Dependencies </summary>
+<summary> It's default recipe looks like so (comments are only present here) </summary>
 
-- [Python](https://www.python.org/downloads) (3.9)
-- [FFmpeg](https://ffmpeg.org/download.html)
-- [VapourSynth x64](https://www.vapoursynth.com) (R54)
+> Learn what each setting does on it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki/Configuring-Smoothie-(recipe))
 
-VapourSynth plugins
-- [FFMS2](https://github.com/FFMS/ffms2)
-- [HAvsFunc](https://github.com/HomeOfVapourSynthEvolution/havsfunc)
-- [SVPFlow](https://github.com/bjaan/smoothvideo/blob/main/SVPflow_LastGoodVersions.7z)
-- [vs-frameblender](https://github.com/couleurm/vs-frameblender)
-- [weighting.py](https://github.com/couleur-tweak-tips/Smoothie/blob/master/plugins/weighting.py)
-- [filldrops.py](https://github.com/couleur-tweak-tips/Smoothie/blob/master/plugins/filldrops.py)
+```yaml
+interpolation: # Tries to guess frames in between existing ones to increase FPS
+  enabled: yes # If you want to interpolate or not
+  fps: 960 # The FPS you wish to interpolate to
+  speed: medium # What accuracy you want (fast, faster and fastest will take less time, but make worse frames)
+  tuning: weak # This and 'algorithm' are different ways to make interpolation, check the wiki
+  algorithm: 23 # Same deal
+  use gpu: yes # GPU acceleration
+
+frame blending: # Converts high FPS footage (e.g 240, 960) to a lower frame rate (e.g 30, 60 for YT) with motion blur
+  enabled: yes # If you want want it to frame blend or not
+  fps: 60 # The FPS you want it blended down to
+  intensity: 1.27 # 1.0 is what you're used to, more will make a longer kind of "ghoserfz", I love 1.5 @ 60FPS
+  weighting: equal # How each blur frame's opacity is decided (default is every one of them is equal)
+
+encoding: 
+  process: ffmpeg # ffmpeg binary name, useful to tune if you got different compiled versions
+  args: H264 CPU # You can replace with with your own -c:v/-vf FFmpeg filters
+
+misc:
+  mpv bin: mpv # mpv binary name, same deal as FFmpeg
+  stay on top: true # if you don't want the progress bar always on top
+  verbose: false # Can also be turned on with -verbose or -v via the CLI
+  ding after: 1 # Minimum numbers of videos queued before it plays a little notification sound when all video(s) finished rendering
+  folder: # Override all output videos paths to a specific folder
+  deduplication: y # Frame deduplication (useful if you have a tiny little bit of encoding lag)
+  container: .MP4 # Set this to .MKV to be able to watch the video before it even finishes rendering! (You'll need to remux them to .MP4 after to use the video in specific applications)
+  prefix: # Empty by default, you can make your apex.mp4 be outputted as SM-apex.mp4
+  suffix: detailed # Detailed will say some misc stuff about the settings used on it, can be replaced with your own string
+  dedupthreshold: 0 # Turn that to 0.001 if you want frame deduplication like blur's
+
+timescale: # Set the speed in/out, I like out @ 1.03 to speed a liiittle bit to look cool
+  in: 1
+  out: 1
+```
 </details>
-
