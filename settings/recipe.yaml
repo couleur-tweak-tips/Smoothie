@@ -1,0 +1,37 @@
+interpolation:
+  enabled: yes
+  fps: 720
+  speed: medium
+  tuning: weak
+  algorithm: 23
+  use gpu: no
+  
+frame blending:
+  enabled: yes
+  fps: 60
+  intensity: 1
+  weighting: equal
+  
+flowblur:
+  enabled: yes
+  amount: 100
+  mask: None
+  
+encoding:
+  process: ffmpeg
+  args: H264 CPU
+  
+misc:
+  mpv bin: mpv
+  stay on top: true
+  verbose: false
+  ding after: 1
+  folder: 
+  container: .MP4
+  prefix: 
+  suffix: detailed
+  dedupthreshold: 0
+
+timescale:
+  in: 1.0
+  out: 1.0
