@@ -1,7 +1,6 @@
 from os import path
 from sys import path as importpath
 importpath.append(path.dirname(__file__))
-from sys import exit
 import exec
 import helpers
 helpers.checkOS()

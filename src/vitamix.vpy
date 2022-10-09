@@ -49,7 +49,7 @@ if float(conf['timescale']['in']) != 1: # Input timescale, done before interpola
     video = core.std.AssumeFPS(video, fpsnum=(video.fps * (1 / float(conf['timescale']['in']))))
 
 if str(conf['interpolation']['enabled']).lower() in yes: # Interpolation using Interframe2 (uses SVP-Flow, which is also what blur uses)
-     useGPU = (conf['interpolation']['gpu']) in yes
+     useGPU = (conf['interpolation']['use gpu']) in yes
      if str(conf['interpolation']['fps']).endswith('x'): # if  multiplier support
          interp_fps = int(video.fps * int((conf['interpolation']['fps']).replace('x','')))   
      else:
@@ -136,7 +136,7 @@ if conf['flowblur']['enabled'] not in no:
         bv = core.mv.Analyse(s, isb=True, blksize=16, plevel=2, dct=5)
         fv = core.mv.Analyse(s, blksize=16, plevel=2, dct=5)
         video = core.mv.FlowBlur(video, s, bv, fv, blur=(conf['flowblur']['amount']))
-    if conf['flowblur']['mask'] not in no:
+    if conf['flowblur']['mask'].lower() not in no:
         mask = conf['flowblur']['mask']
         if type(mask_directory) is bytes:
             mask_directory = ''.join(map(chr, mask_directory))

@@ -1,19 +1,19 @@
 interpolation:
-  enabled: true
-  fps: 480
+  enabled: yes
+  fps: 720
   speed: medium
   tuning: weak
   algorithm: 23
-  gpu: true
+  use gpu: no
   
 frame blending:
-  enabled: true
+  enabled: yes
   fps: 60
-  intensity: 1.2
+  intensity: 1
   weighting: equal
   
 flowblur:
-  enabled: false
+  enabled: yes
   amount: 100
   mask: None
   
