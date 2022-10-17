@@ -37,7 +37,7 @@ proc SetWindowPos(hwnd: HANDLE, hWndInsertAfter: HANDLE, x: int, y: int,
     importc: "SetWindowPos".}
 
 proc setSMOnTop* : void {. exportc, dynlib .} =
-    SetWindowPos(GetForegroundWindow(), 0, 0, 0, 1000, 60, 0)
+    SetWindowPos(GetForegroundWindow(), -1, 0, 0, 1000, 60, 0)
     
 proc filedialog* (title: cstring = "Open", filters: cstring = "", dir: cstring = ""): cstring {. exportc, dynlib .} =
     # "C++ Files\0*.cpp;\0Header Files\0*.h\0\0"

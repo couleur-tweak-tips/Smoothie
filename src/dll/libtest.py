@@ -1,6 +1,20 @@
-import lib, time
+from lib import *
+from time import sleep
+from getpass import getpass
+from os import system
 
-[print(i) for i in lib.filedialog()+["\n"]]
-lib.set_sm_on_top()
-while True:
-    time.sleep(1)
+
+def main():
+    [print(i) for i in filedialog()]
+    getpass("\nPress Enter to continue...")
+    set_sm_on_top()
+    system('cls')
+    while True:
+        print("Window is now on top.", end="\r")
+        sleep(1)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        exit()
