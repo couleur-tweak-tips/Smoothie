@@ -6,7 +6,7 @@ Currently this library only supports `Windows` at the moment.
 ### Build
 1. Install Nim using: https://github.com/dom96/choosenim      
     > Recommended: Run the installer, 2~3 times to ensure all dependencies and files are correctly installed.
-2. Open a `cmd | powershell` window in `src/dll`.
+2. Open a `cmd | powershell` window in `src/lib`.
 3. Run the following command:
     ```ps
     nim c -f --app:lib lib.nim
