@@ -9,7 +9,7 @@ Apply motion-blur on your gameplay content with frame interpolation, artifact ma
 * Launching Smoothie from the start menu
 * Send To in the Explorer ([example](https://i.imgur.com/MnyYgfr.mp4))
 * `sm` on the command line, see it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki)
-* MPV Trimmer
+* [MPV Trimmer](https://files.catbox.moe/t45q4k.mp4)
 * One-button script to render and replace videos in your NLE `WIP`
 
 ### Differences compared to blur:
