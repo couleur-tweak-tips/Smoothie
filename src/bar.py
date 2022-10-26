@@ -3,23 +3,22 @@ import PyTaskbar
 from subprocess import Popen
 from os import get_terminal_size, path
 from helpers import *
+import colors
 
-def get_length(file_path:str):
-    stream = probe(file_path)[1]['streams'][0]
+    # if 'duration' in stream:
+    #     length = stream['duration']
+    # elif 'DURATION' in stream['tags']:
+    #     length = get_sec(stream['tags']['DURATION'])
+    # else:
+    #     raise Exception('No duration found in video metadata')
+    # return round(float(length))
 
-    if 'duration' in stream:
-        length = stream['duration']
-    elif 'DURATION' in stream['tags']:
-        length = get_sec(stream['tags']['DURATION'])
-    else:
-        raise Exception('No duration found in video metadata')
-    return round(float(length))
-
-def Bar (command, video):
-    
+def Bar (cmd: dict) -> list:
     try:
+        # vs_proc = sp.Popen(cmd['ff'], stdout=sp.PIPE, stderr=sp.PIPE)
+        # ff_proc = sp.Popen(cmd['vs'], stdin=vs_proc.stdout, stdout=sp.PIPE, stderr=sp.PIPE)
         process = Popen(
-            (command[0] + '|' + command[1]),
+            (cmd['vs'] + '|' + cmd['ff']),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
@@ -27,7 +26,7 @@ def Bar (command, video):
             )
         from yaspin import yaspin, Spinner
         from yaspin.spinners import Spinners
-        spinnertext = f'\033[?25lIndexing {path.basename(video)}'
+        spinnertext = f'\033[s\033[?25lIndexing {path.basename(cmd["path"])}'
         
         if isWT: # then user is running Windows Terminal
             prog = PyTaskbar.Progress()
@@ -46,11 +45,12 @@ def Bar (command, video):
 
         spinner.start()
         stats = {}
-        vid_length = get_length(video)
+        duration = probe(cmd["path"])['duration']
+        vid_length = round(float(duration))
         First = False
         log = []
         for current in process.stdout:
-            log += current
+            log.append(current)
             if not First:
                 spinner.stop()
                 First = True
@@ -60,6 +60,7 @@ def Bar (command, video):
                 for stat in statistic:
                     if '=' in stat:
                         key, val = stat.split('=')
+                            
                         stats[key] = val
 
                 #if stats == {}: # If it failed to parse
@@ -71,7 +72,7 @@ def Bar (command, video):
                 percentage = round((secs_rendered*100) / vid_length, 1)
 
                 columns = get_terminal_size()[0]
-                barsize = columns - (47 + len(path.basename(video)))
+                barsize = columns - (52 + len(path.basename(cmd["path"])))
                 progress = round(((percentage / 100) * barsize))
 
                 #━ ╸
@@ -83,26 +84,38 @@ def Bar (command, video):
                 
                 if isWT:
                     setWTprogress(percentage)
+                    sep = '｜'
                     bar = '\033[38;5;83m\033[9m' + (" " * progress)
                     bar += '\033[38;5;241m' + (" " * (barsize - progress)) + '\033[29m\033[0m'
                 else:
                     prog.setProgress(int(percentage))
+                    sep = '|'
                     bar = '\033[38;5;83m' + ("━" * progress)
                     bar += '\033[38;5;241m' + ("─" * (barsize - progress)) + '\033[0m'  
-                if (percentage <= 10): bar = ' ' + bar
+                    
+                #if (percentage <= 10): # needs a space before it grows a char when it passes 10
+                #    pad = ' ' 
+                #else:
+                #    pad = ''
                 
                 if 'x' in stats['speed']:
-                    stats['speed'] = str(round((float(stats['speed'].replace('x',''))), 2)) + 'x'
+                    stats['speed'] = float(stats['speed'].strip('x'))
+                    if stats['speed'] >= 100:
+                        stats['speed'] = 99.99
+                    stats['speed'] = str(round((stats['speed']), 2)) + 'x'
+                    
+                if len(stats['speed']) == 4:
+                    stats['speed'] = stats['speed'] + ' ' # Balances if it shrinks from 1.21x to 1.2x (1 less char)
                 
                 w = "\033[38;5;255m"
                 g = "\033[38;5;245m"
                 print(
-f"\033[u\033[0J\033[?25l\
-{w}{path.basename(video)} {g}| \
-{w}time{g}: {stats['time']} \033[38;5;245m| \
-{w}speed{g}: {stats['speed']} \033[38;5;245m| \
-{w}{percentage}\033[38;5;87m% \033[38;5;245m|\033[0m \
-{bar}", end='\r')
+f"\033[0J\033[?25l\
+{w}{path.basename(cmd['path'])} {g}{sep} \
+{w}time{g}: {stats['time']} \033[38;5;245m{sep} \
+{bar} \033[38;5;245m{sep} \
+{w}speed{g}: {stats['speed']} \033[38;5;245m{sep} \
+{w}{percentage}\033[38;5;87m%\033[0m", end='\r')
                 #print(f"\033[u\033[0J{percentage}", end='\r')
                 if percentage >= 100: break
         if isWT==True: setWTprogress(0) # Reset
@@ -119,4 +132,4 @@ f"\033[u\033[0J\033[?25l\
         spinner.stop()
         if isWT==True: setWTprogress(0)
         else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
-        print('\033[?25hInterrupted Smoothie (CTRL+C), exitting')    
+        colors.printc('\033[?25h&RESETInterrupted @LBLUESmoothie&RESET (CTRL+C), exitting')    
