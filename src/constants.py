@@ -1,52 +1,40 @@
-recipe = '''
-interpolation:
-  enabled: yes
-  fps: 480
-  mask: yes
-  speed: medium
-  tuning: weak
-  algorithm: 23
-  gpu: true
+from os import path
+from platform import system as ossystem
 
-frame blending:
-  enabled: yes
-  fps: 60
-  intensity: 1.0
-  weighting: equal
-
-flowblur:
-  enabled: no
-  amount: 100
-  mask: cian
-
-encoding:
-  process: ffmpeg
-  args: H264 CPU
-
-misc:
-  verbose: false
-  container: .MKV
-  flavors: fruits
-  folder: 
-  deduplication: no
-  dedupthreshold: 0.001
-
-timescale:
-  in: 1.0
-  out: 1.0
-'''
-
-EncPresets = { # Same setup as TweakList's Get-EncArgs
-    'H264': {
-        'NVENC':       "h264_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
-        'AMF':         "h264_amf -quality quality -qp_i 12 -qp_p 12 -qp_b 12",
-        'QuickSync':   "h264_qsv -preset veryslow -global_quality:v 15",
-        'CPU':         "libx264 -preset slower -x264-params aq-mode=3 -crf 15 -pix_fmt yuv420p10le"
+ENC_PRESETS = {
+    'h264': {
+        'nvenc':     "-c:v h264_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
+        'amf':       "-c:v h264_amf -quality quality -qp_i 16 -qp_p 18 -qp_b 22",
+        'quicksync': "-c:v h264_qsv -preset veryslow -global_quality:v 15",
+        'cpu':       "-c:v libx264 -preset slow -aq-mode 3 -crf 18"
     },
-    'H265': {
-        'NVENC':       "hevc_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
-        'AMF':         "hevc_amf -quality quality -qp_i 16 -qp_p 18 -qp_b 20",
-        'QuickSync':   "hevc_qsv -preset veryslow -global_quality:v 18",
-        'CPU':         "libx265 -preset slow -x265-params aq-mode=3 -crf 18 -pix_fmt yuv420p10le"
+    'h265': {
+        'nvenc':     "-c:v hevc_nvenc -preset p7 -rc vbr -b:v 250M -cq 20 -pix_fmt yuv420p10le",
+        'amf':       "-c:v hevc_amf -quality quality -qp_i 18 -qp_p 20 -qp_b 24 -pix_fmt yuv420p10le",
+        'quicksync': "-c:v hevc_qsv -preset veryslow -global_quality:v 18 -pix_fmt yuv420p10le",
+        'cpu':       "-c:v libx265 -preset medium -x265-params aq-mode=3:no-sao=1 -crf 20 -pix_fmt yuv420p10le"
     }
 }
+
+FRUITS = 'Berry',      'Cherry',   'Cranberry',   'Coconut',   'Kiwi',      \
+         'Avocado',    'Durian',   'Lemon',       'Fig',       'Lime'       \
+         'Mirabelle',  'Banana',   'Pineapple',   'Pitaya',    'Blueberry', \
+         'Raspberry',  'Apricot',  'Strawberry',  'Melon',     'Papaya',    \
+         'Apple',      'Pear',     'Orange',      'Mango',     'Plum',      \
+         'Peach',      'Grape',    'Tomato',      'Cucumber',  'Eggplant',  \
+         'Guava',      'Honeydew', 'Lychee',      'Nut',       'Quince',    \
+         'Olive',      'Passion',  'Plum',        'Pomelo',    'Raisin'
+
+IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.webp', '.tiff', '.bmp', '.jxl', '.avif')
+
+
+VSPIPE_PATH_LINUX = 'vspipe'
+DEFAULT_VPY_NAME = 'vitamix.vpy' # Can be overriden with -vpy 
+DEFAULT_RECIPE = "recipe.yaml" 
+
+SRCDIR = path.dirname(__file__)
+SMDIR = path.dirname(SRCDIR) # That's ../../ if you look at it relative from Smoothie/src/main.py
+MASKDIR = path.join(SMDIR, "masks") # Except this one
+
+ISLINUX = ossystem() == 'Linux'
+ISWIN = ossystem() == 'Windows'
