@@ -1,27 +1,86 @@
+
 from os import path
-from sys import path as importpath
+from sys import argv, path as importpath
 importpath.append(path.dirname(__file__))
-import exec
-import helpers
-helpers.checkOS()
+import execute # Returns a dict containing the recipe, and a long vspipe {config} | ffmpeg command
+from bar import Bar
+from cli import args
+from helpers import *
+from subprocess import run
+import colors
+import constants
+import time
 
-from argparse import ArgumentParser
-parser = ArgumentParser()
-parser.add_argument("-peek",    "-p",   help=" Render a specific frame (outputs an image)",     action="store",       nargs=1, metavar='752',      type=int)
-parser.add_argument("-trim", "-ft",     help=" Trim out the frames you don't want to render",   action="store",       nargs=1, metavar='0:23,1:34'         )
-parser.add_argument("-dir",             help=" opens the directory where Smoothie resides",     action="store_true"                                        )
-parser.add_argument("-recipe",  "-rc",  help=" opens default recipe.ini",                       action="store_true"                                        )
-parser.add_argument("-config",  "-c",   help=" specify override config file",                   action="store",       nargs=1, metavar='PATH',     type=str)
-parser.add_argument("-encargs", "-enc", help=" specify override ffmpeg encoding arguments",     action="store",                                    type=str)
-parser.add_argument("-verbose", "-v",   help=" increase output verbosity",                      action="store_true"                                        )
-parser.add_argument("-outdir",  "-outd",help=" save all output to current directory",           nargs='?', const=''                                        )
-parser.add_argument("-input",   "-i",   help=" specify input video path(s)",                    action="store",       nargs="+", metavar='PATH',   type=str)
-parser.add_argument("-output",  "-o",   help=" specify output video path(s)",                   action="store",       nargs="+", metavar='PATH',   type=str)
-parser.add_argument("-vpy",             help=" specify a VapourSynth script",                   action="store",       nargs=1, metavar='PATH',     type=str)
-parser.add_argument("-cui",             help=" Make terminal stay on top moved on top left",    action="store_true",                                       )
-parser.add_argument("-tonull",          help=" Redirect VS' Y4M output to NULL (for debugging)",action="store_true",                                       )
-parser.add_argument("-tompv",           help=" Redirect VS' Y4M output to MPV  (for debugging)",action="store_true",                                       )
-parser.add_argument("-override", "-ov", help=" Override a recipe value e.g: category;key;value",action="store",       nargs="+", metavar='PATH',   type=str)
+if constants.ISWIN: # File dialog, file opener
+	import tkinter as tk
+	from tkinter import filedialog # Pick a file
+	from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
+	from win32con import HWND_TOPMOST # Make window stay on top
+	hwnd = GetForegroundWindow()
+
+init = time.time()
+
+check_os()
+commands = execute.buildcmd(args) # This builds every commands that will then be ran
+
+for cmd in commands:
+    
+    context = f"""
+VS: {cmd['vs']}
+
+FF: {cmd['ff']}
+
+ARGS: {' '.join(argv)}
+    """
+    
+    command = (cmd['vs'] + ' | ' + cmd['ff'])
+    
+    if args.verbose:
+        
+        print(context)
+        
+        try:
+            a = run(command, shell=True)
+            
+        except KeyboardInterrupt:
+            exit()
+            
+    else: # (try to) display the progress bar
+        
+        if probe(cmd['path'])['duration'] == '':
+            
+            colors.printc(f"@LREDCould not determine duration of @WHITE{path.basename(cmd['path'])}. @REDNot displaying progress bar")
+            
+            try:
+                a = run(command, shell=True)
+            except KeyboardInterrupt:
+                exit()
+            if a.returncode >= 1: log = [" "]
+            
+            
+        else:
+            
+            try:
+                log = Bar(cmd)
+            except KeyboardInterrupt:
+                exit()
+                
+        if (log): # Only returns logs if it throws
+            if args.cui: SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,720,0)
+            colors.printc("Oops! $LRED@WHITESmoothie crashed&RESET@LRED, here's a bunch of info you can share to help us debug:")
+            print(context)
+            for error in log:
+                if error == "\n": continue
+                print(error.replace("\n",""))
+            exitSm(1, args)
 
 
-exec.runvpy(parser)
+
+done = time.time()
+elapsed = done-init
+if elapsed >= 60:
+    term = f"{round(done-init)} minutes"
+else:
+    term = f"{round(done-init, 2)} seconds"
+    
+colors.printc(f"\033[2K@LBLUESmoothie&RESET: Finished rendering @LBLUE{len(commands)}&RESET videos in @LBLUE{term}&RESET")
