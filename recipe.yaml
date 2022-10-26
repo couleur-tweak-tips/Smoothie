@@ -1,26 +1,27 @@
 interpolation:
   enabled: yes
   fps: 720
+  mask: 
   speed: medium
   tuning: weak
   algorithm: 23
   use gpu: no
-  
+
 frame blending:
   enabled: yes
   fps: 60
-  intensity: 1
+  intensity: 1.0
   weighting: equal
-  
+
 flowblur:
-  enabled: yes
+  enabled: no
   amount: 100
-  mask: None
-  
+  mask:
+
 encoding:
   process: ffmpeg
   args: H264 CPU
-  
+
 misc:
   mpv bin: mpv
   stay on top: true
@@ -29,9 +30,14 @@ misc:
   folder: 
   container: .MP4
   prefix: 
-  suffix: detailed
+  suffix: fruits
   dedupthreshold: 0
 
 timescale:
-  in: 1.0
+  in: 1
   out: 1.0
+
+pre interp:
+  enabled: yes
+  factor: 2x
+  model: rife-v4.4
