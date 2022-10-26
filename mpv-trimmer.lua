@@ -4,15 +4,17 @@ local dur = 2500
     -- feel free to lower it if you got that muscle memory uk what im sayin
 
 
-
 local verbose = false
+local mode = 'trim'
+    -- consider these "defaults"
+
 local mp = require 'mp'
 local msg = require 'mp.msg'
 local utils = require 'mp.utils'
 local options = require 'mp.options'
 
 Osdwarn = false
-Trs = {} -- Creates a fresh empty table
+Trs = {} -- Creates a fresh empty table, will be appended start/fin timecodes
 Index = 1 -- Selects the trim 1, for it to be increased/decreased later
 local direcseparator = package.config:sub(1, 1) -- Returns / on *nix and \ on Windows
 
@@ -107,8 +109,8 @@ local function showPoints()
             return
     end
     for ind, _ in ipairs(Trs) do
-        if Trs[ind].filename ~= nil then
-            msg = msg .. "\n" .. "[" .. ind .. "] " .. Trs[ind].filename
+        if Trs[ind].path ~= nil then
+            msg = msg .. "\n" .. "[" .. ind .. "] " .. Trs[ind].path
         end
         if Trs[ind].start ~= nil then
             msg = msg .. " : " .. string.sub(string.format(Trs[ind].start/fps), 1, 4)
@@ -137,7 +139,7 @@ local function start()
 
     if Trs[Index] == nil then Trs[Index] = {} end
     Trs[Index]['start'] = curframe
-    Trs[Index]['filename'] = fn
+    Trs[Index]['path'] = fn
 
     notify(dur, "[g] Set start point of index ["..Index.."] at ".. pos)
 
@@ -168,7 +170,7 @@ local function fin()
         return nil
     end
 
-    Trs[Index]['filename'] = fn
+    Trs[Index]['path'] = fn
 
     notify(dur, "[h] Set end point of index ["..Index.."] at ".. pos)
 
@@ -195,7 +197,10 @@ end;mp.add_key_binding("H", "set-eof", eof)
 
 local function render()
     Trs[#Trs] = nil -- beautiful syntax to remove last object
-    Cmd = {args={'sm','-trim', utils.format_json(Trs)}}
+    Cmd = {args={'sm','-json', utils.format_json(Trs)}}
+    if mode == 'split' then table.insert(Cmd.args,'-split')
+    elseif mode == 'trim' then table.insert(Cmd.args,'-trim')
+    else print('UKNOWN MODE: ' .. mode) end
     if verbose == true then
         table.insert(Cmd.args,'-verbose')
         command = ''
@@ -207,6 +212,16 @@ local function render()
     utils.subprocess_detached(Cmd)
     mp.commandv('quit')
 end;mp.add_key_binding("Ctrl+r", "sm-render", render)
+
+local function cycleModes()
+    if mode == 'trim' then
+        notify(dur, "[k] SPLIT MODE: Separating cuts into separate files")
+        mode = 'split'
+    elseif mode == 'split' then
+        notify(dur, "[k] TRIM MODE: Joining each videos' cuts")
+        mode = 'trim'
+    end
+end;mp.add_key_binding("k", "smt-cycle-modes", cycleModes)
 
 local function toggleVerb()
     if verbose == true then
