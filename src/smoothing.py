@@ -30,10 +30,9 @@ def Masking(clip: vs.VideoNode,
 				break
 
 	rmask = core.ffms2.Source(maskPath)
-	featherMask = rmask.std.Minimum().std.BoxBlur(vradius=6, hradius=6, vpasses=2)
-	
+	featherMask = rmask.std.Minimum().std.BoxBlur(vradius=6, hradius=6, vpasses=2,hpasses = 2)
 
-	return core.std.MaskedMerge(original, clip, featherMask, first_plane=True)
+	return core.std.MaskedMerge(clipa=clip, clipb=original, mask=featherMask, first_plane=True)
 	# region debug
 	# print(logging.debug(maskPath))
 	# print(logging.debug(clip.format))
@@ -95,34 +94,28 @@ def Smoothing (video, rc):
 
 
 
+	if float(ts := rc['timescale']['in']) != 1: # Input timescale, done before interpolation
 
-	if float(rc['timescale']['in']) != 1: # Input timescale, done before interpolation
-
-		video = core.std.AssumeFPS(video, fpsnum=(video.fps * (1 / float(rc['timescale']['in']))))
-
+		video = core.std.AssumeFPS(video, fpsnum=(video.fps * (1 / float(ts))))
 
 
 
-	if str(rc['pre interp']['enabled']) in yes:
-		pi = rc['pre interp']
 
-		if 'mask' in pi.keys():
-			if pi['mask'] not in no:
-				original = video
+	if str((pi := rc['pre interp'])['enabled']) in yes:
 
 
-		if path.isfile(pi['ffdata']): # then the user specified the absolute DLL path
-			rifelib = pi['ffdata']
-		else: # guess it
-			rifelib = path.join(pi['ffdata'], "pkgs/rife-ncnn-vs/vapoursynth64/RIFE.dll")
+		# if path.isfile(pi['ffdata']): # then the user specified the absolute DLL path
+		# 	rifelib = pi['ffdata']
+		# else: # guess it
+		# 	rifelib = path.join(pi['ffdata'], "pkgs/rife-ncnn-vs/vapoursynth64/RIFE.dll")
 
-		if not path.exists(rifelib):
-			raise FileNotFoundError(f"Model directory not found: [{rifelib}]")
+		# if not path.exists(rifelib):
+		# 	raise FileNotFoundError(f"Model directory not found: [{rifelib}]")
 
-		try:
-			core.std.LoadPlugin(path.abspath(pi['rife lib']))
-		except:
-			raise vs.Error("Failed to load RIFE plugin lib")
+		# try:
+		# 	core.std.LoadPlugin(path.abspath(pi['rife lib']))
+		# except:
+		# 	raise vs.Error("Failed to load RIFE plugin lib")
 
 		cMatrix = '709'
 			
@@ -163,10 +156,15 @@ def Smoothing (video, rc):
 		if path.exists(pi['model']):
 			model_path = pi['model']
 		else:
-			model_path = f"{pi['ffdata']}/pkgs/rife-ncnn-vs/{pi['model']}"
+			model_path = f"{rc['runtime']['smDir']}/models/{pi['model']}"
 			
 		if not path.exists(model_path):
 			raise FileNotFoundError(f"Model directory not found: [{model_path}]")
+
+		if 'mask' in pi.keys():
+			if pi['mask'] not in no:
+				original = video
+				verb(original)
 
 		#clip = core.misc.SCDetect(clip=clip, threshold=0.14)
 		video = core.rife.RIFE(
@@ -175,38 +173,46 @@ def Smoothing (video, rc):
 			model_path=model_path,
 			gpu_id=0, gpu_thread=1, tta=False, uhd=False, sc=True
 			)
-		video = vs.core.resize.Bicubic(video, format=vs.YUV444P16, matrix_s=cMatrix)
+
+		if 'mask' in pi.keys():
+			if pi['mask'] not in no:
+				video = Masking(
+					clip=video,
+					original=original,
+					maskDir=constants.MASKDIR,
+					maskFn=rc['flowblur']['mask']
+				)
+    
+		video = vs.core.resize.Bicubic(video, format=vs.YUV420P8, matrix_s=cMatrix)
+		#verb("the fuck is" + cMatrix)
 
 
+	if str((ip := rc['interpolation'])['enabled']).lower() in yes:
 
-
-
-	if str(rc['interpolation']['enabled']).lower() in yes:
-
-
-		if rc['interpolation']['mask'] not in no:
-			original = video
+		if 'mask' in ip.keys():
+			if ip['mask'] not in no:
+				original = video
         
-		useGPU = (rc['interpolation']['use gpu']) in yes
+		useGPU = (ip['use gpu']) in yes
 
-		if str(rc['interpolation']['fps']).endswith('x'): # if multiplier support
-			interp_fps = int(video.fps * int((rc['interpolation']['fps']).replace('x','')))
+		if str(ip['fps']).endswith('x'): # if multiplier support
+			interp_fps = int(video.fps * int((ip['fps']).replace('x','')))
 		else:
-			interp_fps = int(rc['interpolation']['fps'])
+			interp_fps = int(ip['fps'])
 
 		video = havsfunc.InterFrame(
 			video,
 			GPU=useGPU,
 			NewNum=interp_fps,
-			Preset=str(rc['interpolation']['speed']),
-			Tuning=str(rc['interpolation']['tuning']),
-			OverrideAlgo=int(rc['interpolation']['algorithm'])
+			Preset=str(ip['speed']),
+			Tuning=str(ip['tuning']),
+			OverrideAlgo=int(ip['algorithm'])
 		)
-		if rc['interpolation']['mask'] not in no:
+		if ip['mask'] not in no:
 			video = Masking(
 				clip=video,
 				original=original,
-				maskFn=rc['interpolation']['mask'],
+				maskFn=ip['mask'],
 				maskDir= constants.MASKDIR
             )
 		
@@ -297,23 +303,38 @@ def Smoothing (video, rc):
 		video = core.frameblender.FrameBlend(video, weights)
 		video = havsfunc.ChangeFPS(video, int(rc['frame blending']['fps']))
 
+		if 'mask' in ip.keys():
+			if ip['mask'] not in no:
+				video = Masking(
+					clip=video,
+					original=original,
+					maskDir=constants.MASKDIR,
+					maskFn=ip['mask']
+				)
 
 
-	if rc['flowblur']['enabled'] not in no:
+	if (flb := rc['flowblur'])['enabled'] not in no:
+          
+		if rc['flowblur']['amount'] not in no: # If it was 0 or none there there wouldn't be any blurring to do anyways
+      
+			if 'mask' in flb.keys():
+				if flb['mask'] not in no:
+						original = video
 
-		if rc['flowblur']['amount'] not in no:
-			original = video # Makes an un-smeared copy to use for the mask later	
+      
 			s = core.mv.Super(video, 16, 16, rfilter=3)
 			bv = core.mv.Analyse(s, isb=True, blksize=16, plevel=2, dct=5)
 			fv = core.mv.Analyse(s, blksize=16, plevel=2, dct=5)
 			video = core.mv.FlowBlur(video, s, bv, fv, blur=(rc['flowblur']['amount']))
-
-			if rc['flowblur']['mask'].lower() not in no:
-				video = Masking(
-        			clip=video,
-					original=original,
-					maskDir=constants.MASKDIR,
-					maskFn=rc['flowblur']['mask'])
+   
+			if 'mask' in flb.keys():
+				if rc['flowblur']['mask'] not in no:
+					video = Masking(
+						clip=video,
+						original=video,
+						maskDir=constants.MASKDIR,
+						maskFn=rc['flowblur']['mask']
+					)
     
 				#region oldmask
 				# mask = rc['flowblur']['mask']
