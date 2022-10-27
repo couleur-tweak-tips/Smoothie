@@ -79,8 +79,8 @@ ARGS: {' '.join(argv)}
 done = time.time()
 elapsed = done-init
 if elapsed >= 60:
-    term = f"{round(done-init)} minutes"
+    term = f"{round(elapsed/60, 2)} minutes"
 else:
-    term = f"{round(done-init, 2)} seconds"
+    term = f"{round(elapsed, 2)} seconds"
     
 colors.printc(f"\033[2K@LBLUESmoothie&RESET: Finished rendering @LBLUE{len(commands)}&RESET videos in @LBLUE{term}&RESET")
