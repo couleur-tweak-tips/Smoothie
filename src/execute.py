@@ -386,6 +386,8 @@ VIDEOS (what Smoothie made out of -json):
 		if args.verbose: # Propagate verbosity to VapourSynth
 			rc['misc']['verbose'] = True
 
+		rc['runtime']['smDir'] = constants.SMDIR
+
 		cmd = { # This is the master command that will be appended upon
 			"vs": f'"{vspipe}" "{vpy}" --arg input_video="{path.abspath(filepath)}" -y - --arg rc="{rc}"',
 			"ff": f'{rc["encoding"]["process"]} -hide_banner -loglevel error -stats -stats_period 0.15 -i - ',
