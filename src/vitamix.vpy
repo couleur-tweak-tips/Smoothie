@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 try:
 	global conf
-	rc = literal_eval((rc).decode('utf-8'))
+	rc = literal_eval(rc)
 except NameError:
 	raise vs.Error("Failed to load recipe (not declared with VSPipe --arg?)")
 except SyntaxError:
@@ -23,7 +23,6 @@ except SyntaxError:
 def verb(msg):
 	if rc['misc']['verbose'] == True:
 		print(logging.debug(f' {msg}'))
-
 
 rt = rc['runtime']
 	
@@ -46,12 +45,12 @@ if rt['cut type'] in (False, 'split'): # Then there's no cutting/already been ha
 
 	rc['timecodes'] = (1,2) # So the loop does not throw
  
-	if rt['cut type'] == 'split':
-		s, e = rt['timecodes']['start'], rt['timecodes']['fin']
+	if ct := rt['cut type'] == 'split':
+		s, e = ct['start'], ct['fin']
 		clip = core.std.Trim(clip, s, e)
 else:
-	for i in range(len(rt['timecodes'])):
-		s, e = rt['timecodes'][i]['start'], rt['timecodes'][i]['fin']
+	for i in range(len(tc := rt['timecodes'])):
+		s, e = tc[i]['start'], tc[i]['fin']
 		if e == 'EOF': e = clip.num_frames-1
 
 		if len(range(e, clip.num_frames-1)) < 1*fps: # If it's less than one second off the end
