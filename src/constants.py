@@ -26,7 +26,7 @@ FRUITS = 'Berry',      'Cherry',   'Cranberry',   'Coconut',   'Kiwi',      \
          'Olive',      'Passion',  'Plum',        'Pomelo',    'Raisin'
 
 IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.webp', '.tiff', '.bmp', '.jxl', '.avif')
-
+VIDEO_EXTS = ('.mp4', '.mkv', '.mov', '.mkv', '.wmv', '.webm', '.ts')
 
 VSPIPE_PATH_LINUX = 'vspipe'
 DEFAULT_VPY_NAME = 'vitamix.vpy' # Can be overriden with -vpy 
