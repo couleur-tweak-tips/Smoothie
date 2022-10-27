@@ -12,8 +12,6 @@ import constants
 import time
 
 if constants.ISWIN: # File dialog, file opener
-	import tkinter as tk
-	from tkinter import filedialog # Pick a file
 	from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
 	from win32con import HWND_TOPMOST # Make window stay on top
 	hwnd = GetForegroundWindow()
