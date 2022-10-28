@@ -1,6 +1,6 @@
 # Provides bindings to [lib.dll].
 
-from ctypes import CDLL, c_char_p
+from ctypes import CDLL, c_char_p, c_bool
 from os.path import dirname
 
 # Absolute paths are required to load the dll file.
@@ -18,6 +18,8 @@ def openFileDialog(title: str = "Open", filters: str = "All Files (*.*)|*.*", di
     return ofd(title.encode(), filters.encode(), dir.encode()).decode().splitlines()
 
 
-def setWinOnTop():
+def setWinOnTop(debug: bool):
     # Puts any foreground window on top of all other windows.
-    dll.setWinOnTop()
+    swot = dll.setWinOnTop
+    swot.argtypes = [c_bool]
+    swot(debug)

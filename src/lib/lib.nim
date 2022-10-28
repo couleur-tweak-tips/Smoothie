@@ -25,5 +25,7 @@ proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*
     else: fps = fpd & "\n"
     return cstring(fps)
 
-proc setWinOnTop*: void {.exportc, dynlib .}=
-    SetWindowPos(GetForegroundWindow(), -1, 0, 0, 1000, 60, 0)
+proc setWinOnTop*(debug: bool): void {.exportc, dynlib .}=
+    var cy: int32 = 60
+    if debug: cy = 720
+    SetWindowPos(GetForegroundWindow(), -1, 0, 0, 1000, cy, 0)
