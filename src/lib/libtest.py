@@ -1,14 +1,15 @@
-from win32lib import *
 from time import sleep
 from getpass import getpass
-from os import system
-
+import os
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
+from lib import *
 
 def main():
-    [print(i) for i in filedialog()]
+    [print(i) for i in openFileDialog()]
     getpass("\nPress Enter to continue...")
-    set_sm_debug()
-    system('cls')
+    setWinOnTop()
+    os.system('cls')
     while True:
         print("Window is now on top.", end="\r")
         sleep(1)
