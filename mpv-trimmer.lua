@@ -18,6 +18,8 @@ Trs = {} -- Creates a fresh empty table, will be appended start/fin timecodes
 Index = 1 -- Selects the trim 1, for it to be increased/decreased later
 local direcseparator = package.config:sub(1, 1) -- Returns / on *nix and \ on Windows
 
+
+
 local function notify(duration, ...)
 	local args = {...}
 	local text = ""
@@ -33,6 +35,8 @@ local function notify(duration, ...)
     print(text)
 	mp.command(string.format("show-text \"%s\" %d 1", text, duration))
 end
+
+
 
 local function create_chapter()
     local time_pos = mp.get_property_number("time-pos")
@@ -64,6 +68,8 @@ end
 mp.add_key_binding("n", "ddqd", create_chapter)
 
 
+
+
 local function incrIndex()
 
     if #Trs < 2 and Trs[Index+1] == nil then
@@ -81,6 +87,8 @@ local function incrIndex()
 end;mp.add_key_binding("C", "increase-index", incrIndex)
 
 
+
+
 local function decrIndex()
     if #Trs < 2 then
         notify(dur, "You only have one starter index,\nstart making a second index before cycling through them.")
@@ -95,6 +103,8 @@ local function decrIndex()
         notify(dur, "[c] Lowered index to ".. Index)
     end
 end;mp.add_key_binding("c", "decrease-index", decrIndex)
+
+
 
 
 local function showPoints()
@@ -124,9 +134,14 @@ local function showPoints()
 end;mp.add_key_binding("Ctrl+p", "showPoints", showPoints)
 
 
+
+
 local function getIndex()
     notify(dur, "[g] Selected index is ".. Index)
 end;mp.add_key_binding("Ctrl+g", "get-index", getIndex)
+
+
+
 
 local function start()
     local pos = mp.get_property_number('playback-time/full')
@@ -148,11 +163,15 @@ local function start()
 end;mp.add_key_binding("g", "set-start", start)
 
 
+
+
 local function sof()
     notify(dur, "[S] Setting index " .. Index .. " to 00:00:00 (start of file)")
     if Trs[Index] == nil then Trs[Index] = {} end
     Trs[Index]['start'] = 0
 end;mp.add_key_binding("G", "set-sof", sof)
+
+
 
 
 local function fin()
@@ -183,6 +202,8 @@ local function fin()
 
 end;mp.add_key_binding("h", "set-fin", fin)
 
+
+
 local function eof()
 
     if Trs[Index]['start'] == nil then
@@ -194,6 +215,8 @@ local function eof()
     notify(dur, "[H] Set end point of index ["..Index.."] to ".. framecount .. " (End of file)")
     Trs[Index]['fin'] = framecount
 end;mp.add_key_binding("H", "set-eof", eof)
+
+
 
 local function render()
     Trs[#Trs] = nil -- beautiful syntax to remove last object
@@ -213,6 +236,8 @@ local function render()
     mp.commandv('quit')
 end;mp.add_key_binding("Ctrl+r", "sm-render", render)
 
+
+
 local function cycleModes()
     if mode == 'trim' then
         notify(dur, "[k] SPLIT MODE: Separating cuts into separate files")
@@ -222,6 +247,8 @@ local function cycleModes()
         mode = 'trim'
     end
 end;mp.add_key_binding("k", "smt-cycle-modes", cycleModes)
+
+
 
 local function toggleVerb()
     if verbose == true then
