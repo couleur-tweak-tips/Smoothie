@@ -1,9 +1,13 @@
 import subprocess
-import PyTaskbar
 from subprocess import Popen
 from os import get_terminal_size, path
+
 from helpers import *
 import colors
+import constants
+
+if constants.ISWIN:
+    import PyTaskbar
 
     # if 'duration' in stream:
     #     length = stream['duration']
@@ -13,7 +17,7 @@ import colors
     #     raise Exception('No duration found in video metadata')
     # return round(float(length))
 
-def Bar (cmd: dict) -> list:
+def Bar (cmd: dict):
     try:
         # vs_proc = sp.Popen(cmd['ff'], stdout=sp.PIPE, stderr=sp.PIPE)
         # ff_proc = sp.Popen(cmd['vs'], stdin=vs_proc.stdout, stdout=sp.PIPE, stderr=sp.PIPE)
@@ -28,20 +32,22 @@ def Bar (cmd: dict) -> list:
         from yaspin.spinners import Spinners
         spinnertext = f'\033[s\033[?25lIndexing {path.basename(cmd["path"])}'
         
-        if isWT: # then user is running Windows Terminal
-            prog = PyTaskbar.Progress()
-            
-            spinner = yaspin(
-                Spinners,
-                text=spinnertext
-                )
-        else: # user is running something else (most probably conhost), I'll add support for more terminals soon if asked
-            prog = PyTaskbar.Progress()
-            prog.init()
-            prog.setState('loading')
-            spinner = yaspin(
-                Spinner(['\\', '|', '/', '-'], 50),
-                text=spinnertext)
+        if constants.ISWIN:
+            if isWT: # then user is running Windows Terminal
+                prog = PyTaskbar.Progress()
+                
+                spinner = yaspin(
+                    Spinners,
+                    text=spinnertext
+                    )
+            else: # user is running something else (most probably conhost), I'll add support for more terminals soon if asked
+                prog = PyTaskbar.Progress()
+                prog.init()
+                prog.setState('loading')
+                
+        spinner = yaspin(
+            Spinner(['\\', '|', '/', '-'], 50),  # type: ignore
+            text=spinnertext)
 
         spinner.start()
         stats = {}
@@ -82,16 +88,17 @@ def Bar (cmd: dict) -> list:
                 
                 if percentage > 100: percentage = 100
                 
-                if isWT:
-                    setWTprogress(percentage)
-                    sep = '｜'
-                    bar = '\033[38;5;83m\033[9m' + (" " * progress)
-                    bar += '\033[38;5;241m' + (" " * (barsize - progress)) + '\033[29m\033[0m'
-                else:
-                    prog.setProgress(int(percentage))
-                    sep = '|'
-                    bar = '\033[38;5;83m' + ("━" * progress)
-                    bar += '\033[38;5;241m' + ("─" * (barsize - progress)) + '\033[0m'  
+                if constants.ISWIN:
+                    if isWT:
+                        setWTprogress(percentage)
+                        sep = '｜'
+                        bar = '\033[38;5;83m\033[9m' + (" " * progress)
+                        bar += '\033[38;5;241m' + (" " * (barsize - progress)) + '\033[29m\033[0m'
+                    else:
+                        prog.setProgress(int(percentage))
+                        sep = '|'
+                        bar = '\033[38;5;83m' + ("━" * progress)
+                        bar += '\033[38;5;241m' + ("─" * (barsize - progress)) + '\033[0m'  
                     
                 #if (percentage <= 10): # needs a space before it grows a char when it passes 10
                 #    pad = ' ' 
@@ -118,8 +125,9 @@ f"\033[0J\033[?25l\
 {w}{percentage}\033[38;5;87m%\033[0m", end='\r')
                 #print(f"\033[u\033[0J{percentage}", end='\r')
                 if percentage >= 100: break
-        if isWT==True: setWTprogress(0) # Reset
-        else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
+        if constants.ISWIN:
+            if isWT==True: setWTprogress(0) # Reset
+            else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
         
         process.communicate()
         if process.returncode != 0:
@@ -130,6 +138,7 @@ f"\033[0J\033[?25l\
     except KeyboardInterrupt:
         process.kill()
         spinner.stop()
-        if isWT==True: setWTprogress(0)
-        else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
+        if constants.ISWIN:
+            if isWT==True: setWTprogress(0)
+            else: prog.setProgress(0);prog.setState('normal');prog.setState('done')
         colors.printc('\033[?25h&RESETInterrupted @LBLUESmoothie&RESET (CTRL+C), exitting')    
