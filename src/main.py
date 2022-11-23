@@ -2,16 +2,19 @@
 from os import path
 from sys import argv, path as importpath
 importpath.append(path.dirname(__file__))
+from subprocess import run
+import time
+
 import execute # Returns a dict containing the recipe, and a long vspipe {config} | ffmpeg command
 from bar import Bar
 from cli import args
 from helpers import *
-from subprocess import run
 import colors
 import constants
-import time
+
 
 if constants.ISWIN: # File dialog, file opener
+	from lib import win32lib
 	from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
 	from win32con import HWND_TOPMOST # Make window stay on top
 	hwnd = GetForegroundWindow()
@@ -64,7 +67,7 @@ ARGS: {' '.join(argv)}
                 exit()
                 
         if (log): # Only returns logs if it throws
-            if args.cui: SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,720,0)
+            if args.cui: win32lib.set_sm_debug
             colors.printc("Oops! $LRED@WHITESmoothie crashed&RESET@LRED, here's a bunch of info you can share to help us debug:")
             print(context)
             for error in log:
