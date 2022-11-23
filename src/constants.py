@@ -9,6 +9,7 @@ ENC_PRESETS = {
         'cpu':       "-c:v libx264 -preset slow -aq-mode 3 -crf 18"
     },
     'h265': {
+        # the '-pix_fmt yuv420p10le' bit makes it a lil more efficient, but may introduce incompatibility with your NLE
         'nvenc':     "-c:v hevc_nvenc -preset p7 -rc vbr -b:v 250M -cq 20 -pix_fmt yuv420p10le",
         'amf':       "-c:v hevc_amf -quality quality -qp_i 18 -qp_p 20 -qp_b 24 -pix_fmt yuv420p10le",
         'quicksync': "-c:v hevc_qsv -preset veryslow -global_quality:v 18 -pix_fmt yuv420p10le",
@@ -28,10 +29,12 @@ FRUITS = 'Berry',      'Cherry',   'Cranberry',   'Coconut',   'Kiwi',      \
 IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.webp', '.tiff', '.bmp', '.jxl', '.avif')
 VIDEO_EXTS = ('.mp4', '.mkv', '.mov', '.mkv', '.wmv', '.webm', '.ts')
 
+# Can all be absolute
 VSPIPE_PATH_LINUX = 'vspipe'
 DEFAULT_VPY_NAME = 'vitamix.vpy' # Can be overriden with -vpy 
 DEFAULT_RECIPE = "recipe.yaml" 
 
+# These are not really constants but w/e, they workie 😋
 SRCDIR = path.dirname(__file__)
 SMDIR = path.dirname(SRCDIR) # That's ../../ if you look at it relative from Smoothie/src/main.py
 MASKDIR = path.join(SMDIR, "masks") # Except this one
