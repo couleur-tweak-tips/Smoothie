@@ -65,10 +65,11 @@ def pause():
     getpass('Press enter to continue..')
 
 # Bool aliases
-yes = ['True','true','yes','y','1', True]
-no = ['False','false','no','n','0','null','','none',None, False]
+yes = ['on','True','true','yes','y','1', True]
+no = ['off','False','false','no','n','0','null','','none',None, False]
 
 def get_sec(timecode):
+    spare = 0
     if type(timecode) is str:
         if '.' in timecode:
             spare = float("0." + timecode.split('.')[1])
@@ -81,7 +82,6 @@ def get_sec(timecode):
     if type(timecode) is str:
         if search('[a-zA-Z]', timecode) is not None:
             raise Exception(f'Timecode to trim contains a letter: {timecode}')
-    if 'spare' not in locals(): spare = 0
     # god bless https://stackoverflow.com/a/6402934
     return sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(timecode).split(':')))) + spare
 
