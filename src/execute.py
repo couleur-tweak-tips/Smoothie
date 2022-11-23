@@ -1,25 +1,27 @@
 ver='0.7.1'
 from sys import argv
 from os import path
-from helpers import *
 from glob import glob as resolve
 from random import choice # Randomize smoothie's flavor
 from subprocess import run, Popen, PIPE
 from yaml import safe_load
 from json import loads
-import constants
 from typing import Any, Iterable
-import colors
 from re import match
 
+import constants
+import colors
+from helpers import *
+
 if constants.ISWIN: # File dialog, file opener
+	from lib import win32lib
 	import tkinter as tk
 	from tkinter import filedialog # Pick a file
 	from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
 	from win32con import HWND_TOPMOST # Make window stay on top
 	hwnd = GetForegroundWindow()
 
-def parse_ez_enc_args(args) -> str:
+def parse_ez_enc_args(args, rc) -> str:
 	
 	def next_in(i: Iterable, idx: int, default: Any = '') -> Any:
 		try:
@@ -48,29 +50,34 @@ def parse_ez_enc_args(args) -> str:
 			if not match(r".* -vf| -lavfi| -filter_complex| -pix_fmt.*", args[0]):
 				args[i] += ' -pix_fmt yuv420p10le'
 			args.pop(i + 1)
-	
-	print(args)
+
+	if rc['misc']['verbose'] == True:
+		print(args)
 	if not match(r"\-acodec|\-c:a|\-codec:a|\-an", ' '.join(args)):
-		print("adding audio")
+		if rc['misc']['verbose'] == True:
+			print("Adding copy audio to encoding arguments")
 		args.append(' -c:a copy')
 
 	return ' '.join(args)
 
 def voidargs(args) -> None:
 	if args.dir:
-		scriptDir = path.dirname(argv[0])
 		if constants.ISWIN:
-			Popen(f'explorer {scriptDir}')
+			Popen(f'explorer {constants.SMDIR}')
 			exitSm(0, args)
 		elif constants.ISLINUX:
-			print(scriptDir)
+			print(constants.SMDIR)
 			exitSm(0, args)
 
-	if args.recipe:
-		recipe = path.join(constants.SMDIR, constants.DEFAULT_RECIPE)
-		if path.exists(recipe) == False:
-			print(f"Looking for recipe path {recipe}")
-			print("recipe (config) path does not exist (are you messing with files?), exitting..")
+	if args.userecipe:
+     
+		dr = constants.DEFAULT_RECIPE
+		recipe = dr if path.exists(dr) \
+				 else path.join(constants.SMDIR, constants.DEFAULT_RECIPE)
+     
+     
+		if not path.exists(recipe):
+			print(f"config path does not exist ({recipe})\n(are you messing with files?), exitting..")
 			exitSm(1, args)
 		if constants.ISWIN:
 			Popen(path.abspath(recipe), shell=True)
@@ -91,9 +98,12 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 			print("VERBOSE: " + message)
 	
 	if args.userecipe:
-		config_filepath = path.expandvars(path.abspath(args.userecipe))
+		config_filepath = path.abspath(path.expandvars(args.userecipe))
 	else:
-		config_filepath = path.join(constants.SMDIR, constants.DEFAULT_RECIPE) # ../recipe.yaml
+		dr = constants.DEFAULT_RECIPE
+												# then provided constant exists
+		config_filepath = dr if path.exists(dr)  \
+            else path.join(constants.SMDIR, constants.DEFAULT_RECIPE)  # ../recipe.yaml
 	
 	rc = {}
 	if not path.exists(config_filepath):
@@ -104,11 +114,11 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 		with open(config_filepath, 'r') as file:
 			rc = safe_load(file)
 	
-	rc['encoding']['args'] = parse_ez_enc_args(rc['encoding']['args'])
-
 	if args.verbose or rc['misc']['verbose'] in yes: # Making sure they're both turned on
 		rc['misc']['verbose'] = True
 		args.verbose = True
+
+	rc['encoding']['args'] = parse_ez_enc_args(args=rc['encoding']['args'], rc=rc)
 
 	if args.cui and rc['misc']['stay on top'] in yes:
 		SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,60,0) # Move and resize terminal to the top left of the screen
@@ -118,6 +128,7 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 		for override in args.override:
 			print("Using override(s):", override)
 			category, key, value = override.split(';')
+			# print(args.override[0]);exit();
 			rc[category][key] = value
 
 	for effect in ['frame blending', 'interpolation', 'flowblur']:
@@ -136,29 +147,48 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 		colors.printc(f"@LBLUESmoothie \33[38;5;244m{ver}&RESET, add the \33[38;5;244m-h&RESET arg for more info on the CLI\nor go to @LBLUE&URLhttps://github.com/couleur-tweak-tips/Smoothie/wiki&RESET")
 		#parser.print_help() # If the user does not pass any args, just redirect to-h (Help)
 		exitSm(0, args)
-	elif constants.ISWIN and not args.input and args.cui and not args.json:
-		root = tk.Tk()
-		none = root.withdraw() # Redirected to none to get supressed from stdout
-		root.iconbitmap(path.dirname(argv[0]) + '/sm.ico')
-		
-		returned = filedialog.askopenfilenames(
+	elif constants.ISWIN and not args.input and args.cui and not args.json and constants.ISWIN:
+		returned = win32lib.filedialog(
 			title="Select video(s) to queue to Smoothie",
-			filetypes= (("Video files", "*.mp4 *.mkv *.webm *.avi"),("All files", "*.*"))
+			filters= f"Video files (*{' *'.join(constants.VIDEO_EXTS)})"
 		)
-		if returned in no: exitSm(1, args)
+		print(returned);exitSm(1, args)
+		#root = tk.Tk()
+		#none = root.withdraw() # Redirected to none to get supressed from stdout
+		#root.iconbitmap(path.dirname(argv[0]) + '/sm.ico')
+		#
+		#returned = filedialog.askopenfilenames(
+		#	title="Select video(s) to queue to Smoothie",
+		#	filetypes= (("Video files", "*.mp4 *.mkv *.webm *.avi"),("All files", "*.*"))
+		#)
+		if returned in no:
+			exitSm(1, args)
 		else:
 			args.input = returned
 
-	elif args.input and not args.json: input_info = args.input
+	elif args.input and not args.json:
+		input_info = args.input
+  
 	elif args.json:
-		input_info = list(loads(args.json.replace("'",'"')))
+
+		try:
+			verb(args.json)
+			input_info = list(loads(args.json
+				.strip("'") # Removes single quotes from start and end
+				.strip('"') # Same for double quotes
+				.replace("'",'"') # If using single quotes for keys, easier to pass from CLI
+				))
+
+		except:
+			raise Exception("Failed to load args.json!")
+   
 	else:
 		print("Could not resolve input selection")
 		exitSm(1, args)
 
 	#input_info = {}
 	videos = list() # This will end up containing paths, and trimming points if given
-	if args.trim and type(input_info[0]) == dict: # Then it is an array of not unique single filenames with start and fin points
+	if args.json and type(input_info[0]) == dict: # Then it is an array of not unique single filenames with start and fin points
 		# It'll need to be properly restructured into dicts with one video in each with 'timecodes' containing all of the same video's cuts
 		timecodes = dict() # Unique timecodes will be appended
 		for cut in input_info:
@@ -166,28 +196,44 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 				timecodes[(cut['path'])] = dict()
 				timecodes[(cut['path'])]['timecodes'] = list()
 			timecodes[(cut['path'])]['timecodes'].append({ # Only append the start and fin, filename unneeded
-				"start": cut["start"],
-				"fin": cut["fin"]
+				"start": get_sec(cut["start"]),
+				"fin": get_sec(cut["fin"])
 			})
 		for filepath in timecodes.keys(): # Restructure it into videos
 			videos.append({
 				"path": filepath,
 				"timecodes": timecodes[filepath]['timecodes']
 			})
+		if args.split:
+			videos = input_info
+			# uniquevideos = []
+			# print(videos)
+			# for video in videos:
+			# 	for timecodes in video['timecodes']:
+			# 		uniquevideos.append({
+			# 			"path": video['path'],
+			# 			"timecodes": timecodes
+			# 		})
+			# videos = uniquevideos
+			# print(uniquevideos);exit()
 	elif args.input:
 		videos = list()
 		for vid in input_info:
 			videos.append({
 				"path": vid
 			})
+	else:
+		raise Exception("Failed to resolve input format")
 
 	if rc['misc']['verbose']:
 		print(
 f"""
 INPUT_INFO (what was received from args):
+Type of input info: {type(input_info)}
 {input_info}
 
 VIDEOS (what Smoothie made out of -json):
+Type of videos: {type(videos)}
 {videos}
 """)
 
@@ -282,6 +328,7 @@ VIDEOS (what Smoothie made out of -json):
 
 	iterations = 0
 	commands = list()
+	takenpaths = [] # For args.trim
 	for video in videos:
 
 		rc['runtime'] = {}
@@ -294,6 +341,7 @@ VIDEOS (what Smoothie made out of -json):
 			elif args.trim: rc['runtime']['cut type']		= "trim"
 		else:
 			rc['runtime']['cut type']						= False
+
 		filepath = video['path']
 	
 		if not path.exists(filepath):
@@ -308,25 +356,31 @@ VIDEOS (what Smoothie made out of -json):
 		if args.trim:		title += " (Trimming)"
 		if args.split:		title += " (Splitting)"
 
+
+
+
+		suffix = ''
+		if rc['interpolation']['enabled'] in yes:
+			suffix += f"{rc['interpolation']['fps']}fps"
+		if rc['frame blending']['enabled'] in yes:
+			suffix += f" ({rc['frame blending']['fps']}, {float(rc['frame blending']['intensity'])}"
+		if rc['flowblur']['enabled'] in yes:
+			suffix += f", bf@{rc['flowblur']['amount']}"
+		if "(" in suffix: suffix += ")"
+		prettysuffix = suffix + ' '
+
 		if not args.json:
 
 			if rc['misc']['suffix'] == 'fruits':
 				USE_FRUITS = True
 				suffix = choice(constants.FRUITS)
 			elif rc['misc']['suffix'] == 'detailed':
-				suffix = ''
-				if rc['interpolation']['enabled'] in yes:
-					suffix += f"{rc['interpolation']['fps']}fps"
-				if rc['frame blending']['enabled'] in yes:
-					suffix += f" ({rc['frame blending']['fps']}, {float(rc['frame blending']['intensity'])}"
-				if rc['flowblur']['enabled'] in yes:
-					suffix += f", bf@{rc['flowblur']['amount']}"
-				if "(" in suffix: suffix += ")"
-				suffix += ' '
+				suffix = prettysuffix
 			else:
 				suffix = rc['misc']['suffix']
 	
-		else: suffix = 'SM'
+		else:
+			suffix = 'SM'
 		
 
 		if args.outdir or args.outdir == '': # Works both as a str and a switch
@@ -356,16 +410,29 @@ VIDEOS (what Smoothie made out of -json):
 			filename = f'{rc["misc"]["prefix"]}{filename}'
 
 		if args.output:
-			if len(args.input) > 1:
-				print("Only a single input is supported when selecting an output file")
-				exitSm(1, args)
+			if not args.json:
+				if len(args.input) > 1:
+					print("Only a single input is supported when selecting an output file")
+					exitSm(1, args)
 			out = args.output[0]
+		elif args.split:
+			count = len(commands)+1
+
+			out = path.join(outdir, f'{filename} ~ {suffix}({count}){ext}')			
+			while path.exists(out) or out in takenpaths:
+				out = path.join(outdir, f'{filename} ~ {suffix}({count}){ext}')
+				count+=1
+			else:
+				takenpaths.append(out)
 		elif not args.output:
 			out = path.join(outdir, f'{filename} ~ {suffix}{ext}')
 			count=2 # Start at "output file (2).mp4", like when copying files on Windows
 			while path.exists(out):
 				out = path.join(outdir, f'{filename} ~ {suffix}({count}){ext}')
 				count+=1
+
+
+
 
 		# Go from
 		# /Smoothie/src/main.py
@@ -381,23 +448,36 @@ VIDEOS (what Smoothie made out of -json):
 				vpy = path.join(constants.SRCDIR, args.vpy[0] )
 			else:
 				vpy = path.abspath(args.vpy[0])
-		else: vpy = path.abspath(path.join(constants.SRCDIR, constants.DEFAULT_VPY_NAME))
+		else:
+			if path.exists(constants.DEFAULT_VPY_NAME):
+				vpy = constants.DEFAULT_VPY_NAME
+			else:
+				vpy = path.abspath(path.join(constants.SRCDIR, constants.DEFAULT_VPY_NAME))
 
 		if args.verbose: # Propagate verbosity to VapourSynth
 			rc['misc']['verbose'] = True
 
 		rc['runtime']['smDir'] = constants.SMDIR
+  
+		# y4mFlag = "-y"
+		y4mFlag = "--container y4m"
+  
 
 		cmd = { # This is the master command that will be appended upon
-			"vs": f'"{vspipe}" "{vpy}" --arg input_video="{path.abspath(filepath)}" -y - --arg rc="{rc}"',
-			"ff": f'{rc["encoding"]["process"]} -hide_banner -loglevel error -stats -stats_period 0.15 -i - ',
+			# vs is the VSPipe (VapourSynth) command, generating the video
+			# ff is the command that receives the input, it is not necessarily ffmpeg, can also be MPV
+			"vs": f'"{vspipe}" "{vpy}" --arg input_video="{path.abspath(filepath)}" {y4mFlag} - --arg rc="{rc}"',
+			"ff": f'{rc["encoding"]["process"]} -hide_banner -loglevel {rc["encoding"]["loglevel"]} -stats -stats_period 0.15 -i - ',
 			"title": title,
 			"path": filepath,
 			"recipe": rc
 		}
 
-		audio_map = '-map 0:v -map 1:a?' if constants.ISWIN else '-map 0:v -map 1:a\?'
-			# This puts the audio's file on the audio-less output file, Linux needs an escape character
+		if not args.stripaudio:
+			audio_map = '-map 0:v -map 1:a?' if constants.ISWIN else '-map 0:v -map 1:a\?'
+				# This puts the audio's file on the audio-less output file, Linux needs an escape character
+		else:
+			audio_map = ''
 
 		if args.peek:
 			frame = int(args.peek[0]) # Extracting the frame passed from the singular array
@@ -407,27 +487,33 @@ VIDEOS (what Smoothie made out of -json):
 			cmd['ff'] += f' -f null NUL'
 		elif args.tompv:
 			cmd['ff'] = rc['misc']['mpv bin'] + ' -' # Overwrite it 😋
-		elif not args.json or args.padding:
+		elif not args.split or not args.trim or args.padding:
 			
 			cmd['ff'] += f'-i "{path.abspath(filepath)}" {audio_map} {rc["encoding"]["args"]} "{out}"'
 				# Inputs original video to take it's audio, VapourSynth does not take/return any
-			
-			for audioarg in ('-c:a','-an','-codec:audio'): # Then copy audio, it defaults to aac
-				if audioarg not in rc["encoding"]["args"]:
-					cmd['ff'] += " -c:a copy"
-					break
+			if not args.stripaudio:
+				for audioarg in ('-c:a','-an','-codec:audio'): # Then copy audio, it defaults to aac
+					if audioarg not in rc["encoding"]["args"]:
+						cmd['ff'] += " -c:a copy"
+						break
+ 
+				if (ts := rc['timescale']['in'] * rc['timescale']['out']) != 1:
+					cmd['ff'] += '-af', f'atempo={ts}' # sync audio
+        
 		elif args.json:
 			cmd['ff'] += f' {rc["encoding"]["args"]} "{out}"'
 
 
-		if 'ffmpeg' in cmd['ff']:
+		if 'ffmpeg' in cmd['ff'] or cmd['ff'].startswith('mpv'):      
+
 			# This will force the output video's color range to be Full
-			range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{video}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
+			range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{filepath}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
 			if range_proc.stdout == 'pc\n':
 				if '-vf ' in cmd['ff']:
 					cmd['ff'] = cmd['ff'].replace('-vf ','-vf scale=in_range=full:out_range=limited,') # Very clever video filters appending
 				else:
-					cmd['ff'] += ' -vf scale=in_range=full:out_range=full '
+					cmd['ff'] += ' -vf scale=in_range=full:out_range=limited '
+
 
 		commands.append(cmd) # Command ended building
 	return commands # buildcmd
