@@ -1,6 +1,6 @@
 
 local dur = 2500
-    -- Duration of message, in milliseconds,
+    -- duration of message, in milliseconds,
     -- feel free to lower it if you got that muscle memory uk what im sayin
 
 
@@ -12,9 +12,9 @@ local utils = require 'mp.utils'
 local options = require 'mp.options'
 
 Osdwarn = false
-Trs = {} -- Creates a fresh empty table
-Index = 1 -- Selects the trim 1, for it to be increased/decreased later
-local direcseparator = package.config:sub(1, 1) -- Returns / on *nix and \ on Windows
+Trs = {} -- creates a fresh empty table
+Index = 1 -- selects the trim 1, for it to be increased/decreased later
+local direcseparator = package.config:sub(1, 1) -- returns / on *nix and \ on Windows
 
 local function notify(duration, ...)
 	local args = {...}
@@ -70,7 +70,7 @@ local function incrIndex()
     end
 
     if Trs[Index+1] == nil then
-        Index = 1 -- Looping through
+        Index = 1 -- looping through
         notify(dur, "[c] (Looping) Increased index back down to ".. Index)
     else
         Index = Index + 1
@@ -86,7 +86,7 @@ local function decrIndex()
     end
 
     if Trs[Index - 1] == nil then
-        Index = #Trs -- Looping through
+        Index = #Trs -- looping through
         notify(dur, "[c] (Looping) Lowered index back up to ".. Index)
     else
         Index = Index - 1
@@ -131,7 +131,7 @@ local function start()
     local fn = mp.get_property("stream-open-filename")
     local curframe = mp.get_property_number('estimated-frame-number')
 
-    if string.match(fn,direcseparator) == nil then -- If running on command line stuff like 'mpv *.mp4' it doesn't provide full path
+    if string.match(fn,direcseparator) == nil then -- if running on command line stuff like 'mpv *.mp4' it doesn't provide full path
         fn = mp.get_property("working-directory")..direcseparator..fn
     end
 
@@ -159,7 +159,7 @@ local function fin()
     local curframe = mp.get_property_number('estimated-frame-number')
     if Trs[Index] == nil then Trs[Index] = {} end
     Trs[Index]['fin'] = curframe
-    if string.match(fn,direcseparator) == nil then -- If running on command line stuff like *.mp4 it doesn't provide full path
+    if string.match(fn,direcseparator) == nil then -- if running on command line stuff like *.mp4 it doesn't provide full path
         fn = mp.get_property("working-directory")..direcseparator..fn
     end
 
@@ -173,8 +173,8 @@ local function fin()
     notify(dur, "[h] Set end point of index ["..Index.."] at ".. pos)
 
     if Trs[Index + 1] == nil then Trs[Index + 1] = {} end
-    if Trs[Index + 1]['start'] == nil and Trs[Index + 1]['fin'] == nil then -- Only step up if it's the last index
-        Index = Index + 1                                                   -- Else it means the user has went back down on an older index
+    if Trs[Index + 1]['start'] == nil and Trs[Index + 1]['fin'] == nil then -- only step up if it's the last index
+        Index = Index + 1                                                   -- else it means the user has went back down on an older index
     end
 
     create_chapter()

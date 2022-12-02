@@ -1,17 +1,17 @@
 from sys import argv, exit
 from os import path, system, listdir
 from helpers import *
-from bar import * # Progress bar
+from bar import * # progress bar
 from glob import glob as resolve
-from random import choice # Randomize smoothie's flavor
+from random import choice # randomize smoothie's flavor
 from subprocess import run, Popen
 from yaml import safe_load
 
 if isWin:
     import tkinter as tk
-    from tkinter import filedialog # Pick a file
-    from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
-    from win32con import HWND_TOPMOST # Make window stay on top
+    from tkinter import filedialog # pick a file
+    from win32gui import GetForegroundWindow, SetWindowPos # move terminal to top left
+    from win32con import HWND_TOPMOST # make window stay on top
     hwnd = GetForegroundWindow()
 
 def voidargs(args):
@@ -58,7 +58,7 @@ def runvpy(parser):
                 videos = loads(args.trim[0])
         else:
             print("Smoothie 0.7, add the -h arg for more info on the CLI\nor go to https://github.com/couleur-tweak-tips/Smoothie/wiki")
-            #parser.print_help() # If the user does not pass any args, just redirect to -h (Help)
+            #parser.print_help() # if the user does not pass any args, just redirect to -h (Help)
             exit(0)
     elif isWin and args.input in [no, None] and args.cui:
         root = tk.Tk()
@@ -104,7 +104,7 @@ def runvpy(parser):
         print(f"VERBOSE: using config file: {config_filepath}")
         
         
-    EncPresets = { # Same setup as TweakList's Get-EncArgs
+    EncPresets = { # same setup as TweakList's Get-EncArgs
         'H264': {
             'NVENC' :       "-c:v h264_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
             'AMF' :         "-c:v h264_amf -quality quality -qp_i 12 -qp_p 12 -qp_b 12",
@@ -118,10 +118,10 @@ def runvpy(parser):
             'CPU' :         "-c:v libx265 -preset slow -x265-params aq-mode=3 -crf 18 -pix_fmt yuv420p10le"
         }
     }
-    passedArgs = conf['encoding']['args'].split(' ') # Make an array that contains what the user passed
+    passedArgs = conf['encoding']['args'].split(' ') # make an array that contains what the user passed
 
     enc, std = False, False
-    for arg in passedArgs: # No maidens nor cases
+    for arg in passedArgs: # no maidens nor cases
         if arg in ['NV','NVENC','NVIDIA']: enc = 'NVENC'
         if arg in ['AMD','AMF']:           enc = 'AMF'
         if arg in ['Intel','QuickSync','QSV']:   enc = 'QuickSync'
@@ -132,14 +132,14 @@ def runvpy(parser):
         if arg in ['HEVC','H.265','HEVC']: std = 'H265'
 
     if enc and std:
-        conf['encoding']['args'] = EncPresets[std][enc] # This makes use of the EncPresets dictionary declared above
+        conf['encoding']['args'] = EncPresets[std][enc] # this makes use of the EncPresets dictionary declared above
         if 'Upscale' in passedArgs or '4K' in passedArgs: conf['encoding']['args'] += ' -vf zscale=3840:2160:f=point'
     
-    for i in videos: # This loop ONLY converts all paths to literal, the actual for loop that does all the process is later down
+    for i in videos: # this loop ONLY converts all paths to literal, the actual for loop that does all the process is later down
         i =- 1
         video = videos[i]
         if type(video) is not str: video = video['filename']
-        if '*' in video: # If filepath contains wildcard, resolve them
+        if '*' in video: # if filepath contains wildcard, resolve them
             for file in resolve(video):
                 if path.isfile(file):
                     args.input.append(file)
@@ -194,7 +194,7 @@ def runvpy(parser):
     conf['TEMP'] = {}
 
     iterations = 0
-    for i in range(len(videos)): # Second loop, now that videos have been expanded
+    for i in range(len(videos)): # second loop, now that videos have been expanded
         #i =- 1
         video = videos[i]
         if type(video) is dict: 
@@ -232,13 +232,13 @@ def runvpy(parser):
             
 
         if args.outdir:
-            if args.outdir == '': # User simply specified the argument, but didn't give a value, so it defaults to current working directory
+            if args.outdir == '': # user simply specified the argument, but didn't give a value, so it defaults to current working directory
                 outdir = path.abspath(path.curdir)
-            else: # Else if speccified use what the user provided
+            else: # else if speccified use what the user provided
                 outdir = path.abspath(args.outdir)
-        elif conf['misc']['folder'] in no: # If no specified output directory in config, use also the input directory as output 
+        elif conf['misc']['folder'] in no: # if no specified output directory in config, use also the input directory as output 
             outdir = path.abspath(path.dirname(video))
-        else: # Else finally use conf
+        else: # else finally use conf
             outdir = conf['misc']['folder']
             
         if args.peek:
@@ -278,17 +278,17 @@ def runvpy(parser):
         if args.verbose:
             conf['misc']['verbose'] = True
 
-        command = [ # This is the master command, it gets appended some extra output args later down
+        command = [ # this is the master command, it gets appended some extra output args later down
         f'"{vspipe}" "{vpy}" --arg input_video="{path.abspath(video)}" --arg mask_directory="{mask_directory}" -y - ',
         f'{conf["encoding"]["process"]} -hide_banner -loglevel error -stats -stats_period 0.15 -i - ',
         ]
         
-        map = '-map 0:v -map 1:a?' if isWin else '-map 0:v -map 1:a\?' # This puts the audio's file on the audio-less output file, Linux needs an escape character
+        map = '-map 0:v -map 1:a?' if isWin else '-map 0:v -map 1:a\?' # this puts the audio's file on the audio-less output file, Linux needs an escape character
         
         if args.peek:
-            frame = int(args.peek[0]) # Extracting the frame passed from the singular array
+            frame = int(args.peek[0]) # extracting the frame passed from the singular array
             command[0] += f'--arg config="{conf}" --start {frame} --end {frame}'
-            command[1] += f' "{out}"' # No need to specify audio map, simple image output
+            command[1] += f' "{out}"' # no need to specify audio map, simple image output
         elif args.tonull:
             command[0] += f'--arg config="{conf}"'
             command[1] += f' -f null NUL'
@@ -298,7 +298,7 @@ def runvpy(parser):
             command[0] += f' --arg config="{conf}"'
             command[1] = conf['misc']['mpv bin'] + ' -'
         
-        elif 'start' in trims.keys() and 'fin' in trims.keys(): # If they're both in here
+        elif 'start' in trims.keys() and 'fin' in trims.keys(): # if they're both in here
             s, e = trims['start'], trims['fin']        
             if s>e:
                 print(f"Trimming point {s} to {e} on video {video} is invalid: end before start??")
@@ -310,22 +310,22 @@ def runvpy(parser):
             conf['TEMP']['start'] = s
             conf['TEMP']['end'] = e
             command[0] += f' --arg config="{conf}"'
-            command[1] += f'{conf["encoding"]["args"]} "{out}"' # No audio since it's desynced and cba
-        elif 'start' in trims.keys() or 'fin' in trims.keys(): # If only one is present
+            command[1] += f'{conf["encoding"]["args"]} "{out}"' # no audio since it's desynced and cba
+        elif 'start' in trims.keys() or 'fin' in trims.keys(): # if only one is present
             print(trims)
             raise Exception('Incomplete trimming timecodes (need both start and end to do da trimming')
         else:
             command[0] += f' --arg config="{conf}"'
 
-            # Adds as input the video to get it's audio tracks and gets encoding arguments from the config file
+            # adds as input the video to get it's audio tracks and gets encoding arguments from the config file
             command[1] += f'-i "{path.abspath(video)}" {map} {conf["encoding"]["args"]} "{out}"'
 
         if 'ffmpeg' in command[1]:
-            # This will force the output video's color range to be Full
+            # this will force the output video's color range to be Full
             range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{video}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
             if range_proc.stdout == 'pc\n':
                 if '-vf ' in command[1]:
-                    command[1] = command[1].replace('-vf ','-vf scale=in_range=full:out_range=limited,') # Very clever video filters appending
+                    command[1] = command[1].replace('-vf ','-vf scale=in_range=full:out_range=limited,') # very clever video filters appending
                 else:
                     command[1] += ' -vf scale=in_range=full:out_range=full '
 
@@ -345,7 +345,7 @@ def runvpy(parser):
                 print(''.join(log))
                 print("VapourSynth and/or FFmpeg failed, here's a bunch of info you can share to help us debug")
                 pause();exit(1)
-        # Don't join these two if statements together, the one at the top is in the loop, while the bottom is when it's finished, notice the tab difference
+        # don't join these two if statements together, the one at the top is in the loop, while the bottom is when it's finished, notice the tab difference
     
     if not args.verbose:
         if args.cui:
@@ -356,7 +356,7 @@ def runvpy(parser):
             print(f"\033[u\033[?25h", end='\r')
 
     if conf['misc']['ding after'] <= len(videos):
-        ding = r"C:\Windows\Media\ding.wav" # Modify that linux users :yum:
+        ding = r"C:\Windows\Media\ding.wav" # modify that linux users :yum:
         ffplay = 'ffplay'
         if path.exists(r"C:\Windows\Media\ding.wav"):
             _ = subprocess.run(f'"{ffplay}" "{ding}" -volume 20 -autoexit -showmode 0 -loglevel quiet', shell=True)

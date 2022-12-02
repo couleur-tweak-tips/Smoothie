@@ -27,8 +27,8 @@ Apply motion-blur on your gameplay content with frame interpolation, artifact ma
 
 To install Smoothie and its dependencies for Windows, run this install script command anywhere:
 
-```powershell
-powershell -noe iex(irm tl.ctt.cx);Get Smoothie
+```PowerShell
+PowerShell -noe iex(irm tl.ctt.cx);Get Smoothie
 ```
 🐧 See for Linux [here](https://github.com/couleur-tweak-tips/Smoothie/wiki)
 

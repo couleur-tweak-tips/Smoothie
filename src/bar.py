@@ -75,9 +75,9 @@ def Bar (command, video):
                 progress = round(((percentage / 100) * barsize))
 
                 #━ ╸
-                # If user is running Windows Terminal, use strikthrough
-                # Else use ─ (not -) for progress bar
-                # They both look the same, but are not compatible with eachanother
+                # if user is running Windows Terminal, use strikthrough
+                # else use ─ (not -) for progress bar
+                # they both look the same, but are not compatible with eachanother
                 
                 if percentage > 100: percentage = 100
                 

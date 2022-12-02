@@ -36,7 +36,7 @@ timescale:
   out: 1.0
 '''
 
-EncPresets = { # Same setup as TweakList's Get-EncArgs
+EncPresets = { # same setup as TweakList's Get-EncArgs
     'H264': {
         'NVENC':       "h264_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
         'AMF':         "h264_amf -quality quality -qp_i 12 -qp_p 12 -qp_b 12",

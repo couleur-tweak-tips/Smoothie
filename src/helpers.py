@@ -8,7 +8,7 @@ from os import environ
 from math import floor
 
 global isWT
-isWT = environ.get('WT_PROFILE_ID') != None # This environemnt variable spawns with WT
+isWT = environ.get('WT_PROFILE_ID') != None # this environemnt variable spawns with WT
 
 def probe(file_path:str):
     
@@ -28,7 +28,7 @@ def fps(file_path:str):
     r_frame_rate = probe(file_path)[1]['streams'][0]['r_frame_rate']
     return round(eval(r_frame_rate))
     
-def setWTprogress(value:int,color:str=None): # Modified from https://github.com/oxygen-dioxide/wtprogress
+def setWTprogress(value:int,color:str=None): # modified from https://github.com/oxygen-dioxide/wtprogress
     if(color!=None):
         color={"green":1,"g":1,"red":2,"r":2,"yellow":4,"y":4}[color]
     else:
@@ -42,7 +42,7 @@ def checkOS ():
         exit(1)
 
     if ossystem() not in ['Linux', 'Windows']:
-        # If hasn't returned yet then throw
+        # if hasn't returned yet then throw
         print(f'Unsupported OS "{ossystem()}"')
         exit(1)
 
@@ -53,7 +53,7 @@ isWin = ossystem() == 'Windows'
 def pause():
     getpass('Press enter to continue..')
 
-# Bool aliases
+# bool aliases
 yes = ['True','true','yes','y','1', True]
 no = ['False','false','no','n','0','null','','none',None, False]
 
