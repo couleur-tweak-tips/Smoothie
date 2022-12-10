@@ -15,11 +15,6 @@ from helpers import *
 
 if constants.ISWIN: # File dialog, file opener
 	from lib import win32lib
-	import tkinter as tk
-	from tkinter import filedialog # Pick a file
-	from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
-	from win32con import HWND_TOPMOST # Make window stay on top
-	hwnd = GetForegroundWindow()
 
 def parse_ez_enc_args(args, rc) -> str:
 	
@@ -121,7 +116,7 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 	rc['encoding']['args'] = parse_ez_enc_args(args=rc['encoding']['args'], rc=rc)
 
 	if args.cui and rc['misc']['stay on top'] in yes:
-		SetWindowPos(hwnd,HWND_TOPMOST,0,0,1000,60,0) # Move and resize terminal to the top left of the screen
+		win32lib.setSmTop(False) # Move and resize terminal to the top left of the screen
 
 
 	if args.override:
@@ -148,23 +143,14 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 		#parser.print_help() # If the user does not pass any args, just redirect to-h (Help)
 		exitSm(0, args)
 	elif constants.ISWIN and not args.input and args.cui and not args.json and constants.ISWIN:
-		returned = win32lib.filedialog(
+		returned = win32lib.openFileDialog(
 			title="Select video(s) to queue to Smoothie",
 			filters= f"Video files (*{' *'.join(constants.VIDEO_EXTS)})"
 		)
-		print(returned);exitSm(1, args)
-		#root = tk.Tk()
-		#none = root.withdraw() # Redirected to none to get supressed from stdout
-		#root.iconbitmap(path.dirname(argv[0]) + '/sm.ico')
-		#
-		#returned = filedialog.askopenfilenames(
-		#	title="Select video(s) to queue to Smoothie",
-		#	filetypes= (("Video files", "*.mp4 *.mkv *.webm *.avi"),("All files", "*.*"))
-		#)
 		if returned in no:
 			exitSm(1, args)
 		else:
-			args.input = returned
+			args.input = input_info = returned
 
 	elif args.input and not args.json:
 		input_info = args.input
