@@ -1,7 +1,6 @@
 interpolation:
   enabled: yes
   fps: 720
-  mask: 
   speed: medium
   tuning: weak
   algorithm: 23
@@ -20,6 +19,7 @@ flowblur:
 
 encoding:
   process: ffmpeg
+  loglevel: error
   args: H264 CPU
 
 misc:
@@ -34,10 +34,10 @@ misc:
   dedupthreshold: 0
 
 timescale:
-  in: 1
+  in: 1.0
   out: 1.0
 
 pre interp:
-  enabled: yes
+  enabled: no
   factor: 2x
   model: rife-v4.4

@@ -41,11 +41,11 @@ def Masking(clip: vs.VideoNode,
 	#video = core.std.MaskedMerge(
 	#	clipa=original,
 	#	clipb=video,
-	#	mask=rmask.std.Minimum().std.Minimum().std.Minimum().std.Minimum().std.BoxBlur(vradius = 6,vpasses = 2,hradius 	= 6,hpasses = 2),
+	#	mask=rmask.std.Minimum().std.Minimum().std.Minimum().std.Minimum().std.BoxBlur(vradius = 6,vpasses = 2,hradius 	= 6, hpasses = 2),
 	#	first_plane=True
 	#)
 	#endregion
- 
+
 
 def parse_weights(orig) -> tuple:
 
@@ -86,6 +86,46 @@ def parse_weights(orig) -> tuple:
 
 
 
+
+def average(clip: vs.VideoNode, weights: list[float], divisor: float  | None = None):
+    
+    def get_offset_clip(offset: int) -> vs.VideoNode:
+        if offset > 0:
+            return clip[0] * offset + clip[:-offset]
+        elif offset < 0:
+            return clip[-offset:] + clip[-1] * (-offset)
+        else:
+            return clip
+
+    diameter = len(weights)
+    radius = diameter // 2
+
+    if divisor is None:
+        divisor = sum(weights)
+
+    assert diameter % 2 == 1, "You need an odd number of weights"
+
+    clips = [get_offset_clip(offset) for offset in range(-radius, radius + 1)]
+
+    expr = ""
+    # expr_vars = "xyzabcdefghijklmnopqrstuvw"
+    expr_vars = []
+    for i in range(0, 1024): expr_vars += [f"src{i}"]
+    
+    for var, weight in zip(expr_vars[:diameter], weights):
+        expr += f"{var} {weight} * "
+
+    expr += "+ " * (diameter - 1)
+    expr += f"{divisor} /" if divisor != 1 else ""
+
+    clip = core.akarin.Expr(clips, expr)
+
+    return clip
+
+
+
+
+
 def Smoothing (video, rc):
 
 	def verb(msg):
@@ -99,10 +139,7 @@ def Smoothing (video, rc):
 		video = core.std.AssumeFPS(video, fpsnum=(video.fps * (1 / float(ts))))
 
 
-
-
 	if str((pi := rc['pre interp'])['enabled']) in yes:
-
 
 		# if path.isfile(pi['ffdata']): # then the user specified the absolute DLL path
 		# 	rifelib = pi['ffdata']
@@ -154,6 +191,8 @@ def Smoothing (video, rc):
 			)
 
 		if path.exists(pi['model']):
+			if path.isfile(pi['model']):
+				raise NotADirectoryError("You need to specify the model's directory, not file")
 			model_path = pi['model']
 		else:
 			model_path = f"{rc['runtime']['smDir']}/models/{pi['model']}"
@@ -166,7 +205,6 @@ def Smoothing (video, rc):
 				original = video
 				verb(original)
 
-		#clip = core.misc.SCDetect(clip=clip, threshold=0.14)
 		video = core.rife.RIFE(
 			video,
 			multiplier=str(pi['factor']).strip('x'),
@@ -188,6 +226,9 @@ def Smoothing (video, rc):
 
 
 	if str((ip := rc['interpolation'])['enabled']).lower() in yes:
+
+		if float(video.fps) > ip['fps']:
+			raise ValueError("Input FPS greater than specified interpolation FPS")
 
 		if 'mask' in ip.keys():
 			if ip['mask'] not in no:
@@ -300,7 +341,20 @@ def Smoothing (video, rc):
 			verb(f"PARAMS: {args}")
         
 		weights = getattr(weighting, func)(blended_frames, **args)
-		video = core.frameblender.FrameBlend(video, weights)
+		wa = len(weights)
+		verb(f"Weights: {wa}")
+		# if len(weights) >= 26:
+		# 	verb(f"weights provided: {wa}, using legacy frameblender (tops at 128)")
+		# 	video = core.frameblender.FrameBlend(clip=video, weights=weights)
+		# elif len(weights) >= 26 and len(weights) <= 31: # Because why not.
+		# 	verb(f"weights provided: {wa}, using averageframes (tops at 31)")
+		# 	video = core.std.AverageFrames(clip=video, weights=weights)
+		# else:
+		# 	verb(f"weights provided: {wa}, using fast expr (tops at 25)")
+		# 	video = average(clip=video, weights=weights)
+
+		# video = core.frameblender.FrameBlend(clip=video, weights=weights)
+		video = average(clip=video, weights=weights)
 		video = havsfunc.ChangeFPS(video, int(rc['frame blending']['fps']))
 
 		if 'mask' in ip.keys():

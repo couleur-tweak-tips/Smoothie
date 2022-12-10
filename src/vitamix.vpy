@@ -1,5 +1,6 @@
 import vapoursynth as vs
 from vapoursynth import core
+from math import floor
 
 from os import path
 from sys import path as envpath
@@ -12,9 +13,11 @@ from ast import literal_eval
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
+import json
+
 try:
-	global conf
-	rc = literal_eval(rc)
+	rc = literal_eval(rc)#.decode('utf-8'))
+
 except NameError:
 	raise vs.Error("Failed to load recipe (not declared with VSPipe --arg?)")
 except SyntaxError:
@@ -26,55 +29,56 @@ def verb(msg):
 
 rt = rc['runtime']
 	
-if path.splitext(input_video)[1] == '.avi':
-	clip = core.avisource.AVISource(input_video)
-	clip = core.fmtc.matrix(clip=clip, mat="709", col_fam=vs.YUV, bits=16)
-		# If you're gonna bother working with .AVI you're probably using 709 anyways
-		# (let me know of one valid case to use this container as input)
-	clip = core.fmtc.resampling(clip=clip, css="420")
-	clip = core.fmtc.bitdepth(clip=clip, bits=8)
-else:
-	clip = core.ffms2.Source(source=input_video, cache=False)
-
-fps = int(clip.fps) # It is of "fraction type" per default
-
-def toframes(timecode):
-	return round(get_sec(timecode)*60)
-
-if rt['cut type'] in (False, 'split'): # Then there's no cutting/already been handled
-
-	rc['timecodes'] = (1,2) # So the loop does not throw
- 
-	if ct := rt['cut type'] == 'split':
-		s, e = ct['start'], ct['fin']
-		clip = core.std.Trim(clip, s, e)
-else:
-	for i in range(len(tc := rt['timecodes'])):
-		s, e = tc[i]['start'], tc[i]['fin']
-		if e == 'EOF': e = clip.num_frames-1
-
-		if len(range(e, clip.num_frames-1)) < 1*fps: # If it's less than one second off the end
-			logging.info("End of clip was 1 second off the end, joining to EOF")
-			e = clip.num_frames-1 # Then remove the end trim, thus rendering till the end of the clip
-		verb(f"Trimming from {round(s/fps, 2)} to {round(e/fps, 2)}")
-		out = core.std.BlankClip(clip[0])
-		if 'toadd' in locals():
-			toadd += clip[s:e]
-		else:
-			toadd = clip[s:e]
-	clip = toadd
-
+clip = core.lsmas.LWLibavSource(source=input_video, cache=1, prefer_hw=3)
 
 clip = Smoothing(clip, rc)
 
-# This is what I used for padding, cancelled for now
-# if rc['runtime']['type']: # If you're doing trimming
-# 	out += toadd
-# 	if not rt['timecodes'][i] == rt['timecodes'][i]: # it's not the last
-# 		length = (toframes(rt['timecodes'][i+1]['start']) - e) * rc['frame blending']['fps'] // int(clip.fps)
-# 		out += core.std.BlankClip(clip[0], length=(length))
-# 		logging.debug(f"ERR:{(get_sec(rt['timecodes'][i+1]['start']) - out.num_frames/(rc['frame blending']['fps']))}")
-# else:
-# 	out = toadd 
+fps = float(clip.fps) # It is of "fraction type" per default
+
+def toframes(timecode):
+	return floor(get_sec(timecode)*fps)
+
+verb(f"OG clip length: {clip.num_frames}")
+blackClip = core.std.BlankClip(clip, length=clip.num_frames)
+
+match rt['cut type']:
+    
+	case "trim":
+		for i in range(len(tc := rt['timecodes'])):
+      
+			s, e = tc[i]['start'], tc[i]['fin']
+			if e == 'EOF':
+				e = clip.num_frames-1
+			verb(f"Index #{i}: from {s} to {e}")
+			s, e = toframes(s), toframes(e)
+
+			if i == 0:  
+				toadd = clip[s:e]
+			else:
+				if e == 'EOF':
+					toadd += clip[s:]
+				else:
+					toadd += clip[s:e]
+
+		clip = toadd
+
+	case "padding":
+		Mappings = ""
+		for i in range(len(tc := rt['timecodes'])):
+		
+			dStart, dEnd = tc[i]['start'], tc[i]['fin']
+			verb(f"Keeping clip #{i} from {dStart} to {dEnd}")
+	
+			s = round(toframes(tc[i]['start']) - (0.1 * fps))
+			e = round(toframes(tc[i]['fin']) + (0.1 * fps))
+	
+			Mappings += f"[{max(s-1, 0)} {min(e, clip.num_frames)-1}] "
+		verb(f"Mappings: {Mappings}")
+		clip = core.remap.ReplaceFramesSimple(blackClip, clip, mappings=Mappings.rstrip(' '))
+  
+  
+	case "split":
+			s, e = toframes(rt['start']), toframes(rt['fin'])
+			clip = core.std.Trim(clip, s, e)
 
 clip.set_output()
