@@ -1,7 +1,7 @@
 import winim/[lean, shell]
 import strutils
 
-proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*)|*.*", dir: cstring = "."): cstring {.exportc, dynlib .} =
+proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*)|*.*", dir: cstring = "."): cstring {.exportc, dynlib.} =
     var 
         opf: OPENFILENAME
         buf = T(65536)
