@@ -23,6 +23,7 @@ def Bar (cmd: dict):
         
         if constants.ISWIN:
             if isWT: # then user is running Windows Terminal
+                endchar = "\r"
                 prog = PyTaskbar.Progress()
                 
                 spinner = yaspin(
@@ -30,6 +31,7 @@ def Bar (cmd: dict):
                     text=spinnertext
                     )
             else: # user is running something else (most probably conhost), I'll add support for more terminals soon if asked
+                endchar = None
                 prog = PyTaskbar.Progress()
                 prog.init()
                 prog.setState('loading')
@@ -37,6 +39,8 @@ def Bar (cmd: dict):
                 spinner = yaspin(
                     Spinner(['\\', '|', '/', '-'], 50),  # type: ignore
                     text=spinnertext)
+        else:
+            endchar = None
 
         spinner.start()        
         duration = probe(cmd["path"])['duration']
@@ -106,8 +110,8 @@ f"\033[u\033[0J\033[?25l\
                 # to both error handle and format stdout like I do
                 message = current
                 log.append(current)
-                
-            print(message, end="\r")
+            
+            print(message, end=endchar)
             sleep(0.15)
             if len(current) == 0: # if be finished
                 break
