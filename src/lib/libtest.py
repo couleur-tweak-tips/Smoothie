@@ -1,18 +1,23 @@
-from win32lib import *
 from time import sleep
 from getpass import getpass
-from os import system
-
+import os
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
+import win32lib
+from win32lib import *
 
 def main():
-    [print(i) for i in filedialog()]
+    [print(i) for i in win32lib.openFileDialog()]
     getpass("\nPress Enter to continue...")
-    set_sm_debug()
-    system('cls')
-    while True:
-        print("Window is now on top.", end="\r")
-        sleep(1)
-
+    win32lib.setSmTop(False)
+    os.system('cls')
+    print("Window is now on top.", end="\r")
+    getpass("\r")
+    os.system('cls')
+    win32lib.setSmDebug(True)
+    print("Debug Mode!", end="\r")
+    getpass("\r")
+    
 if __name__ == "__main__":
     try:
         main()
