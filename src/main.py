@@ -15,9 +15,6 @@ import constants
 
 if constants.ISWIN: # File dialog, file opener
 	from lib import win32lib
-	from win32gui import GetForegroundWindow, SetWindowPos # Move terminal to top left
-	from win32con import HWND_TOPMOST # Make window stay on top
-	hwnd = GetForegroundWindow()
 
 init = time.time()
 
@@ -26,12 +23,14 @@ commands = execute.buildcmd(args) # This builds every commands that will then be
 
 for cmd in commands:
     
+    # Used in verbose mode or when Smoothie/what it uses crashes
     context = f"""
-VS: {cmd['vs']}
+VSPipe command:\n{cmd['vs']}
 
-FF: {cmd['ff']}
+FFmpeg command:\n{cmd['ff']}
 
-ARGS: {' '.join(argv)}
+Arguments passed to Smoothie:\n
+{' '.join(argv)}
     """
     
     command = (cmd['vs'] + ' | ' + cmd['ff'])
@@ -67,8 +66,8 @@ ARGS: {' '.join(argv)}
                 exit()
                 
         if (log): # Only returns logs if it throws
-            if args.cui: win32lib.set_sm_debug
-            colors.printc("Oops! $LRED@WHITESmoothie crashed&RESET@LRED, here's a bunch of info you can share to help us debug:")
+            if args.cui: win32lib.setSmDebug(False)
+            colors.printc("Oops! $LRED@WHITESmoothie crashed&RESET@LRED, here's a bunch of info you can look into and share to help us debug:")
             print(context)
             for error in log:
                 if error == "\n": continue
