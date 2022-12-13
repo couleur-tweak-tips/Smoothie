@@ -4,7 +4,7 @@ import strutils
 
 SetProcessDPIAware()
 
-proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*)or*.*", dir: cstring = "."): cstring {.exportc, dynlib.} =
+proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*)|*.*", dir: cstring = "."): cstring {.exportc, dynlib.} =
     var 
         opf: OPENFILENAME
         buf = T(65536)
@@ -32,19 +32,52 @@ proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*
 proc GetDpiForSystem(): UINT {.winapi, stdcall, dynlib: "user32", importc.}
 proc SetWndStyle(hwnd: HWND, nIndex: int32, style: LONG_PTR): void {.importc.}
 
-proc setSMWndParams*(ontop: bool, borderless: bool, width: int, height: int): void {.exportc, dynlib.} =
+proc setSMWndParams*(ontop: bool, borderless: bool, width: int, height: int, pos: int = 1): void {.exportc, dynlib.} =
     let 
         s =  GetDpiForSystem() / 96
         hwnd = GetConsoleWindow()
-        cx = int32(float(width) * s)
-        cy = int32(float(height) * s)
+        cx = (float(width) * s).LONG
+        cy = (float(height) * s).LONG
+        hout = GetStdHandle(STD_OUTPUT_HANDLE)
+
     var 
         mi: MONITORINFO
+        ci: CONSOLE_SCREEN_BUFFER_INFO
+        buf: COORD
         hwndpos = 0
+        x, y: LONG
+
     mi.cbSize = sizeof(mi).DWORD
+    GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)
+
+    if ontop: hwndpos = HWND_TOPMOST
     if borderless:
         SetWndStyle(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW)
         SetWndStyle(hwnd, GWL_EXSTYLE, WS_EX_DLGMODALFRAME or WS_EX_COMPOSITED or WS_EX_OVERLAPPEDWINDOW or WS_EX_LAYERED or WS_EX_STATICEDGE or WS_EX_TOOLWINDOW or WS_EX_APPWINDOW)
-    if ontop: hwndpos = HWND_TOPMOST
-    GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)
-    SetWindowPos(hwnd, hwndpos, mi.rcMonitor.right-cx, mi.rcmonitor.bottom-(cy+40), cx, cy, SWP_FRAMECHANGED)
+        SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_NOACTIVATE or SWP_NOMOVE or SWP_NOREPOSITION)     
+    case pos:
+        of 1:
+            x = mi.rcMonitor.left
+            y = mi.rcMonitor.top
+        of 2:
+            x = mi.rcMonitor.left 
+            y = mi.rcMonitor.bottom - (cy + 40)
+        of 3:
+            x = mi.rcMonitor.right - cx
+            y = mi.rcMonitor.top
+        of 4:
+           x = mi.rcMonitor.right - cx 
+           y = mi.rcMonitor.bottom - (cy + 40)
+        else:
+            discard
+
+    SetWindowPos(hwnd, hwndpos, x, y, cx, cy, 0)
+    GetConsoleScreenBufferInfo(hout, &ci)
+
+    # Minimum Buffer sizes for removing the scrollbar.
+    if borderless and width >= 185 and height >= 20:
+        buf.X = ci.dwSize.X
+        buf.Y = (ci.srWindow.Bottom - ci.srWindow.Top) + 1
+        SetConsoleScreenBufferSize(hout, buf)
+
+
