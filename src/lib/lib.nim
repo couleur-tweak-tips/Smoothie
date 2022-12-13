@@ -12,6 +12,7 @@ proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*
         fpsseq: seq[string]
 
     opf.lStructSize = sizeof(OPENFILENAME).DWORD
+    opf.hwndOwner = GetConsoleWindow()
     opf.lpstrTitle = title
     opf.lpstrFilter = ("$1\0" % $filters).replace("or", "\0")
     opf.lpstrInitialDir = dir
@@ -31,15 +32,19 @@ proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*
 proc GetDpiForSystem(): UINT {.winapi, stdcall, dynlib: "user32", importc.}
 proc SetWndStyle(hwnd: HWND, nIndex: int32, style: LONG_PTR): void {.importc.}
 
-proc setWinOnTop*(debug: bool): void {.exportc, dynlib.} =
+proc setSMWndParams*(ontop: bool, borderless: bool, width: int, height: int): void {.exportc, dynlib.} =
     let 
         s =  GetDpiForSystem() / 96
         hwnd = GetConsoleWindow()
+        cx = int32(float(width) * s)
+        cy = int32(float(height) * s)
     var 
-        cy: int32 = 60
         mi: MONITORINFO
-    if debug: cy = 720
-    SetWndStyle(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW)
-    SetWndStyle(hwnd, GWL_EXSTYLE, WS_EX_DLGMODALFRAME or WS_EX_COMPOSITED or WS_EX_OVERLAPPEDWINDOW or WS_EX_LAYERED or WS_EX_STATICEDGE or WS_EX_TOOLWINDOW or WS_EX_APPWINDOW or WS_EX_TOPMOST)
-    GetMonitorInfo(MonitorFromWindow(GetConsoleWindow(), MONITOR_DEFAULTTONEAREST), &mi);
-    SetWindowPos(GetForegroundWindow(), HWND_TOPMOST, mi.rcMonitor.left, mi.rcmonitor.top, int32(1000 * s), int32(cy * 2), 0)
+        hwndpos = 0
+    mi.cbSize = sizeof(mi).DWORD
+    if borderless:
+        SetWndStyle(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW)
+        SetWndStyle(hwnd, GWL_EXSTYLE, WS_EX_DLGMODALFRAME or WS_EX_COMPOSITED or WS_EX_OVERLAPPEDWINDOW or WS_EX_LAYERED or WS_EX_STATICEDGE or WS_EX_TOOLWINDOW or WS_EX_APPWINDOW)
+    if ontop: hwndpos = HWND_TOPMOST
+    GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)
+    SetWindowPos(hwnd, hwndpos, mi.rcMonitor.right-cx, mi.rcmonitor.bottom-(cy+40), cx, cy, SWP_FRAMECHANGED)
