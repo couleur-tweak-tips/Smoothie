@@ -1,7 +1,10 @@
+{.compile: "lib.c".}
 import winim/[lean, shell]
 import strutils
 
-proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*)|*.*", dir: cstring = "."): cstring {.exportc, dynlib.} =
+SetProcessDPIAware()
+
+proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*)or*.*", dir: cstring = "."): cstring {.exportc, dynlib.} =
     var 
         opf: OPENFILENAME
         buf = T(65536)
@@ -10,7 +13,7 @@ proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*
 
     opf.lStructSize = sizeof(OPENFILENAME).DWORD
     opf.lpstrTitle = title
-    opf.lpstrFilter = ("$1\0" % $filters).replace("|", "\0")
+    opf.lpstrFilter = ("$1\0" % $filters).replace("or", "\0")
     opf.lpstrInitialDir = dir
     opf.lpstrFile = &buf
     opf.nMaxFile = len(buf).DWORD
@@ -25,7 +28,18 @@ proc openFileDialog*(title: cstring = "Open", filters: cstring = "All Files (*.*
     else: fps = fpd & "\n"
     return cstring(fps)
 
-proc setWinOnTop*(debug: bool): void {.exportc, dynlib .}=
-    var cy: int32 = 60
+proc GetDpiForSystem(): UINT {.winapi, stdcall, dynlib: "user32", importc.}
+proc SetWndStyle(hwnd: HWND, nIndex: int32, style: LONG_PTR): void {.importc.}
+
+proc setWinOnTop*(debug: bool): void {.exportc, dynlib.} =
+    let 
+        s =  GetDpiForSystem() / 96
+        hwnd = GetConsoleWindow()
+    var 
+        cy: int32 = 60
+        mi: MONITORINFO
     if debug: cy = 720
-    SetWindowPos(GetForegroundWindow(), -1, 0, 0, 1000, cy, 0)
+    SetWndStyle(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW)
+    SetWndStyle(hwnd, GWL_EXSTYLE, WS_EX_DLGMODALFRAME or WS_EX_COMPOSITED or WS_EX_OVERLAPPEDWINDOW or WS_EX_LAYERED or WS_EX_STATICEDGE or WS_EX_TOOLWINDOW or WS_EX_APPWINDOW or WS_EX_TOPMOST)
+    GetMonitorInfo(MonitorFromWindow(GetConsoleWindow(), MONITOR_DEFAULTTONEAREST), &mi);
+    SetWindowPos(GetForegroundWindow(), HWND_TOPMOST, mi.rcMonitor.left, mi.rcmonitor.top, int32(1000 * s), int32(cy * 2), 0)
