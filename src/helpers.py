@@ -1,18 +1,18 @@
-from getpass import getpass
-from sys import exit
-from re import search
+import getpass
+import sys
+import re
 import platform
-from os import environ
+import os
 import json
-import subprocess as sp
+import subprocess
 
 def exitSm(errorlevel, args) -> None: # Do not "instantly" close the terminal
 	if args.cui:
 		none = input("Press enter to exit")
-	exit(errorlevel)
+	sys.exit(errorlevel)
 
 global isWT
-isWT = environ.get('WT_PROFILE_ID') != None # This environemnt variable spawns with WT
+isWT = os.environ.get('WT_PROFILE_ID') != None # This environemnt variable spawns with WT
 
 def probe(file_path: str) -> dict:
 
@@ -23,7 +23,7 @@ def probe(file_path: str) -> dict:
            "-show_streams",
            file_path)
 
-    data = json.loads(sp.check_output(cmd))
+    data = json.loads(subprocess.check_output(cmd))
     
     if 'duration' not in data['format'].keys():
         data['format']['duration'] = ""
@@ -62,7 +62,7 @@ def check_os():
 
 
 def pause():
-    getpass('Press enter to continue..')
+    getpass.getpass('Press enter to continue..')
 
 # Bool aliases
 yes = ['on','True','true','yes','y','1', True]
@@ -80,7 +80,7 @@ def get_sec(timecode):
         return timecode
     if type(timecode) is list: timecode = timecode[0]
     if type(timecode) is str:
-        if search('[a-zA-Z]', timecode) is not None:
+        if re.search('[a-zA-Z]', timecode) is not None:
             raise Exception(f'Timecode to trim contains a letter: {timecode}')
     # god bless https://stackoverflow.com/a/6402934
     return sum(int(x) * 60 ** i for i, x in enumerate(reversed(str(timecode).split(':')))) + spare
