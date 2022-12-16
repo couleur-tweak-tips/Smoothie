@@ -16,6 +16,7 @@ from helpers import *
 if constants.ISWIN: # File dialog, file opener
 	from lib import win32lib
 
+
 def parse_ez_enc_args(args, rc) -> str:
 	
 	def next_in(i: Iterable, idx: int, default: Any = '') -> Any:
@@ -30,9 +31,8 @@ def parse_ez_enc_args(args, rc) -> str:
 		word = word.lower()
 		if word == "avc": word = "h264"
 		if word == "hevc": word = "h265"
-
-		if 'x26' in word: # x265 or x264
-			args[i] = constants.ENC_PRESETS['h26' + word[3]]['cpu'] #+ ' -c:a copy'
+		if word == "x264": word = "h264"
+		if word == "x265": word = "h265"
 			
 		elif (std := word) in constants.ENC_PRESETS: # valid standard
 			if (enc := next_in(args, i)) in constants.ENC_PRESETS[std]: # valid encoder
@@ -483,8 +483,8 @@ Type of videos: {type(videos)}
 						cmd['ff'] += " -c:a copy"
 						break
  
-				if (ts := rc['timescale']['in'] * rc['timescale']['out']) != 1:
-					cmd['ff'] += '-af', f'atempo={ts}' # sync audio
+				# if (ts := rc['timescale']['in'] * rc['timescale']['out']) != 1:
+				# 	cmd['ff'] += '-af', f'atempo={ts}' # sync audio # broken
         
 		elif args.json:
 			cmd['ff'] += f' {rc["encoding"]["args"]} "{out}"'
@@ -500,6 +500,8 @@ Type of videos: {type(videos)}
 				else:
 					cmd['ff'] += ' -vf scale=in_range=full:out_range=limited '
 
+		if rc['preview']['enabled'] in yes:
+			cmd['ff'] += f" {rc['preview']['ffmpeg']} | {rc['preview']['process']} {rc['preview']['args']}"
 
 		commands.append(cmd) # Command ended building
 	return commands # buildcmd
