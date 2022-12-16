@@ -22,6 +22,12 @@ encoding:
   loglevel: error
   args: H264 CPU
 
+preview:
+  enabled: no
+  ffmpeg: -s 1280x720 -f yuv4mpegpipe -
+  process: ffplay
+  args: -loglevel quiet -i - -autoexit -window_title smoothie.preview -loglevel quiet
+
 misc:
   mpv bin: mpv
   stay on top: true
