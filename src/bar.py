@@ -100,7 +100,7 @@ f"\033[u\033[0J\033[?25l\
             spinner.stop()
             indexText = "Creating lwi index file "
             if current.startswith(indexText):
-                message = "Indexing: " + current.strip(indexText)
+                message = "Indexing: " + current.strip(indexText).strip()
             elif fnmatch(current, "frame=*fps=*q=*size=*time=*bitrate=*speed=*"):
                 message = display_bar(current)
             elif fnmatch(current, "Output * frames in * seconds (* fps)"):
