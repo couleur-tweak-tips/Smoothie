@@ -9,7 +9,7 @@
 <h4 align="center">
   <a href="https://github.com/couleur-tweak-tips/Smoothie/wiki">Docs</a> |
   <a href="https://www.youtube.com/playlist?list=PLrsLsEZL_o4M_yTqZGwN5cM5ZxJTqkWkZ">Demo Playlist</a> |
-  <a href="https://www.medusajs.com">Website</a>
+  <a href="https://ctt.cx">Website</a>
 </h4>
 
 <p align="center">
