@@ -1,10 +1,10 @@
-#requires -version 7.2 # Needs you to install pwsh 7, doesn't come with Windows!!
+#requires -version 7.2 #! Needs you to install pwsh 7, does not come with Windows!
 using namespace System.Net.Http # Used to download
 param(
-    [switch]$UPX,
-    [switch]$Strip,
-    [switch]$BatLauncher,
-    [version]$ver
+    [switch]$UPX, # Compress with UPX
+    [switch]$Strip, # Remove unecessary components from Python runtime
+    [switch]$BatLauncher, # Include simple batch files
+    [version]$ver # version to name zip
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,9 +13,20 @@ $smDir = Get-Item "D:\GitHub\Smoothie" -ErrorAction Stop
 function SetupEnvironment {
     param(
         [Array]$Links,
-        $DLFolder = "$env:TMP\smBuild",
+        $DLFolder = "$env:TMP\smDeps",
+        $BuildDir = "$env:TMP\smBuild",
         $Script
     )
+
+    if (-not (Test-Path $DLFolder)){
+        New-Item -ItemType Directory -Path $DLFolder -ErrorAction Stop
+    }
+
+    if (-not (Test-Path $BuildDir)){
+        New-Item -ItemType Directory -Path $BuildDir -ErrorAction Stop
+    }
+
+
     $jobs = @()
     ForEach($File in $Links.Keys){
 
@@ -47,14 +58,20 @@ function SetupEnvironment {
         Set-Variable -Name $_.BaseName -Value $_
     }
 
+    
+
+    Push-Location $BuildDir
+
     if ($Script -is [ScriptBlock]){
         & $Script
     }
+
+    Pop-Location
 }
 function Get-Release{
     param(
         $Repo, # Username or organization/Repository
-        $Pattern # Wildcard pattern 
+        $Pattern # Wildcard pattern
     )
     Write-Host "Getting $Pattern from $Repo"
     $Latest = (Invoke-RestMethod https://api.github.com/repos/$Repo/releases/latest -ErrorAction Stop).assets.browser_download_url |
@@ -140,10 +157,12 @@ SetupEnvironment -Links @{
     Set-Content ./Smoothie/src/lastargs.txt -Value "" -Force
     Get-ChildItem ./Smoothie/masks/*.ffindex | Remove-Item
     Get-ChildItem . -Recurse -Include "__pycache__" | Remove-Item -Force -Recurse
-    # if ($UPX){
-    #     Write-Warning "UPX Compression"
-    #     Get-ChildItem $VS/vapoursynth64/ -Recurse -Include *.dll | ForEach-Object { upx.exe -q -9 $PSItem}
-    # }
+    if ($UPX){
+        Write-Warning "UPX Compression"
+        Get-ChildItem $VS/vapoursynth64/ -Recurse -Include *.dll |
+            Where-Object Length -gt 1MB | #
+            ForEach-Object { upx.exe -q -9 $PSItem}
+    }
     if ($Strip){
         Write-Warning "Stripping"
         @(
@@ -176,7 +195,7 @@ title Smoothie's simple Batch Launcher
     Set-Content ./Smoothie/Smoothie-Launcher-Verbose.cmd @"
 @echo off
 if "check" == "%~1check" (
-    echo Drag a video on this!
+    echo Drag a video on the file!
     pause>nul
     exit
 )
@@ -186,7 +205,8 @@ cd /D "%~dp0"
 if %ERRORLEVEL% == 0 (exit) else (pause)
 "@
     }
-    Compress-Archive -Path ./Smoothie, ./VapourSynth/ -DestinationPath ./Smoothie-$ver`.zip
+    7z a "Smoothie-$ver`.7z" .\Smoothie\ .\VapourSynth\ -t7z -mx=8 -sae -- 
+ # Compress-Archive -Path ./Smoothie, ./VapourSynth/ -DestinationPath ./Smoothie-$ver`.zip
 
 
 
