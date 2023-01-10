@@ -1,5 +1,9 @@
 name: Deploy to GitHub Pages
 
+defaults:
+  run:
+    working-directory: docusaurus
+
 on:
   push:
     branches:
@@ -20,10 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: npm install --frozen-lockfile
-        working-directory: docusaurus
       - name: Build website
         run: npm build
-        working-directory: docusaurus
 
       # Popular action to deploy to GitHub Pages:
       # Docs: https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-docusaurus
