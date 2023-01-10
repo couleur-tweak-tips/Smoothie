@@ -34,6 +34,7 @@ Smoothie is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritt
 * Export on MPV via my sister project [suckless-cut](https://github.com/couleur-tweak-tips/suckless-cut)
 * One-button script to render and replace videos in your video-editor `WIP for VEGAS Pro`
 
+
 ### Differences compared to blur:
 ```diff
 - No "color grading" option (contrast, brightness..) feel free to PR

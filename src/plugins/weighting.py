@@ -37,6 +37,15 @@ def scale_range(n: int, start: Number, end: Number):
     if n <= 1: return [start] * n
     return [(x * (end - start) / (n - 1)) + start for x in range(n)]
 
+def vegas_weights(input_fps: int, out_fps: int, blur_amt: int = 1) -> list[float]:
+    weights: list
+    n_weights = int(input_fps / out_fps * blur_amt)
+    if n_weights % 2 == 0:
+        weights = [1] + [2] * (n_weights - 1) + [1]
+    else:
+        weights = [1] * n_weights
+
+    return [1 / w for w in weights]
 
 def ascending(frames: int):
     """

@@ -39,5 +39,21 @@ SRCDIR = path.dirname(__file__)
 SMDIR = path.dirname(SRCDIR) # That's ../../ if you look at it relative from Smoothie/src/main.py
 MASKDIR = path.join(SMDIR, "masks") # Except this one
 
+EncPresets = { # Same setup as TweakList's Get-EncArgs
+    'H264': {
+        'NVENC':       "h264_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
+        'AMF':         "h264_amf -quality quality -qp_i 12 -qp_p 12 -qp_b 12",
+        'QuickSync':   "h264_qsv -preset veryslow -global_quality:v 15",
+        'CPU':         "libx264 -preset slower -x264-params aq-mode=3 -crf 15 -pix_fmt yuv420p10le"
+    },
+    'H265': {
+        'NVENC':       "hevc_nvenc -preset p7 -rc vbr -b:v 250M -cq 18",
+        'AMF':         "hevc_amf -quality quality -qp_i 16 -qp_p 18 -qp_b 20",
+        'QuickSync':   "hevc_qsv -preset veryslow -global_quality:v 18",
+        'CPU':         "libx265 -preset slow -x265-params aq-mode=3 -crf 18 -pix_fmt yuv420p10le"
+    }
+}
+
 ISLINUX = ossystem() == 'Linux'
-ISWIN = ossystem() == 'Windows'
+ISWIN   = ossystem() == 'Windows'
+
