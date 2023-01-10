@@ -1,4 +1,40 @@
 import math
+import warnings
+from numbers import Number
+
+
+def normalize(weights: list):
+    """
+    Normalize a list of weights to sum to 1
+    """
+
+    if min(weights) < 0:
+        absmin = abs(min(weights))
+        weights = [w + absmin + 1 for w in weights] # remove negative weights
+
+    tot = sum(weights)
+    return [w / tot for w in weights]
+
+
+def scale_range(n: int, start: Number, end: Number):
+    """
+    Returns a list of `n` numbers from `start` to `end`
+    >>> res = scale_range(5, 0, 1)
+    >>> assert res[0] == 0 and res[-1] == 1
+    >>> assert len(res) == 5
+    """
+    if n <= 1: return [start] * n
+    return [(x * (end - start) / (n - 1)) + start for x in range(n)]
+
+def vegas_weights(input_fps: int, out_fps: int, blur_amt: int = 1) -> list[float]:
+    weights: list
+    n_weights = int(input_fps / out_fps * blur_amt)
+    if n_weights % 2 == 0:
+        weights = [1] + [2] * (n_weights - 1) + [1]
+    else:
+        weights = [1] * n_weights
+
+    return [1 / w for w in weights]
 
 def scaleWeights(frames):
     tot = sum(frames)
