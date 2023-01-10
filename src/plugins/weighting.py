@@ -1,3 +1,14 @@
+"""
+
+All weighting functions are of the following basic form:
+    Args:
+        frames: `int` | number of frames to generate weights for
+    Returns:
+        `list[float]`: `[w1, w2, ..., wN]` | weights for each frame
+Reference:
+    https://github.com/siveroo/HFR-Resampler
+"""
+
 import math
 import warnings
 from numbers import Number
@@ -36,71 +47,134 @@ def vegas_weights(input_fps: int, out_fps: int, blur_amt: int = 1) -> list[float
 
     return [1 / w for w in weights]
 
-def scaleWeights(frames):
-    tot = sum(frames)
-    return [frame / tot for frame in frames]
+def ascending(frames: int):
+    """
+    Linear ascending curve
+    """
+    val = [x for x in range(1, frames + 1)]
+    return normalize(val)
 
-# modified functions taken from https://github.com/siveroo/HFR-Resampler
 
-# returns a list of values like below:
-# [0, 1, 2, 3, ..., frames] -> [a, ..., b]
-def scaleRange(frames, a, b):
-    return [(x * (b - a) / (frames - 1)) + a for x in range(0, frames)]
-    
-def ascending(frames):
-    r = [*range(frames+1)] # Increments frames by 1
-    r = r[1:] # Skips first element
-    return r
-    
-def equal(frames):
+def descending(frames: int):
+    """
+    Linear descending curve
+    """
+    val = [x for x in range(frames, 0, -1)]
+    return normalize(val)
+
+
+def equal(frames: int):
+    """
+    Flat curve
+    """
     return [1 / frames] * frames
 
-def gaussian(frames, standard_deviation = 2, bound = [0, 2]):
-    r = scaleRange(frames, bound[0], bound[1])
-    val = [math.exp(-((x) ** 2) / (2 * (standard_deviation ** 2))) for x in r]
-    return scaleWeights(val)
 
-def gaussianSym(frames, standard_deviation = 2, bound = [0, 2]):
+def gaussian(frames: int, apex: Number = 2, std_dev: Number = 1, bound: tuple[float, float] = (0, 2)):
+    """
+    Args:
+        bound: `[a, b]` | x axis vector from `a` to `b`
+        apex: `μ`       | the position of the center of the peak, relative to x axis vector
+        std_dev: `σ`    | width of the "bell", higher == broader / flatter
+    Reference:
+        https://en.wikipedia.org/wiki/Gaussian_function
+    """
+    _warn_bound(bound, "gaussian")
+
+    r = scale_range(frames, bound[0], bound[1]) # x axis vector
+
+    val = [1 / (math.sqrt(2 * math.pi) * std_dev) # normalization
+           * math.exp(-((x - apex) / std_dev) ** 2 / 2) # gaussian function
+           for x in r]
+
+    return normalize(val)
+
+
+def gaussian_sym(frames: int, std_dev: Number = 1, bound: tuple[float, float] = (0, 2)):
+    """
+    Same as `gaussian()` but symmetric;
+    the peak (apex) will always be at the center of the curve
+    """
+    _warn_bound(bound, "gaussian_sym")
+
     max_abs = max(bound)
-    r = scaleRange(frames, -max_abs, max_abs)
-    val = [math.exp(-((x) ** 2) / (2 * (standard_deviation ** 2))) for x in r]
-    return scaleWeights(val)
+    r = scale_range(frames, -max_abs, max_abs)
 
-def pyramid(frames, reverse = False):
-    val = []
-    if reverse:
-        val = [x for x in range(frames, 0, -1)]
-    else:
-        val = [x for x in range(1, frames + 1)]
-    return scaleWeights(val)
+    val = [1 / (math.sqrt(2 * math.pi) * std_dev)
+           * math.exp(-(x / std_dev) ** 2 / 2)
+           for x in r]
 
-def pyramidSym(frames):
-    val = [((frames - 1) / 2 - abs(x - ((frames - 1) / 2)) + 1) for x in range(0, frames)]
-    return scaleWeights(val)
+    return normalize(val)
 
-def funcEval(func, nums):
-    try:
-        return eval(f"[({func}) for x in nums]")
-    except NameError as e:
-        raise InvalidCustomWeighting
 
-def custom(frames, func = "", bound = [0, 1]):
-    r = scaleRange(frames, bound[0], bound[1])
-    val = funcEval(func, r)
-    if min(val) < 0: val -= min(val)
-    return scaleWeights(val)
+def pyramid(frames: int):
+    """
+    Symmetric pyramid function
+    """
+    half = (frames - 1) / 2
+    val = [half - abs(x - half) + 1 for x in range(frames)]
 
-# stretch the given array (weights) to a specific length (frames)
-# example : frames = 10, weights = [1,2]
-# result : val = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2], then normalize it to [0.0667,
-# 0.0667, 0.0667, 0.0667, 0.0667, 0.1333, 0.1333, 0.1333, 0.1333, 0.1333]
-def divide(frames, weights):
-    r = scaleRange(frames, 0, len(weights) - 0.1)
-    val = []
-    for x in range(0, frames):
-        scaled_index = int(r[x])
-        val.append(weights[scaled_index])
+    return normalize(val)
 
-    if min(val) < 0: val -= min(val)
 
-    return scaleWeights(val)
+def func_eval(func: str, nums: list[float]):
+    """
+    Run an operation on a sequence of numbers
+    Names allowed in `func`:
+        - Everything in the `math` module
+        - `x`: the current number (frame) in the sequence
+        - `frames` (`len(nums)`): number of elements in the sequence (blended frames)
+        - The following built-in functions: `sum`, `abs`, `max`, `min`, `len`, `pow`, `range`, `round`
+    """
+
+    # math functions + math related builtins
+    namespace = {k:v for k, v in math.__dict__.items() if not k.startswith("_")}
+    namespace |= {
+        'frames': len(nums), # total number of items (frames)
+        'x': None, # iterator for nums
+        '__builtins__': {
+            'sum': sum,
+            'abs': abs,
+            'max': max,
+            'min': min,
+            'len': len,
+            'pow': pow,
+            'range': range,
+            'round': round
+        }
+    }
+    # only allow functions specified in namespace
+    return eval(f"[({func}) for x in {nums}]", namespace)
+
+
+def custom(frames: int, func: str = "", bound: tuple[float, float] = (0, 1)):
+    """
+    Arbitrary custom weighting function
+    """
+    _warn_bound(bound, func)
+
+    r = scale_range(frames, bound[0], bound[1])
+    val = func_eval(func, r)
+
+    return normalize(val)
+
+
+def divide(frames: int, weights: list[float]):
+    """
+    Stretch the given array (weights) to a specific length (frames)
+    Example: `frames = 10; weights = [1, 2]`
+    Result: `val == [1, 1, 1, 1, 1, 2, 2, 2, 2, 2]`, then normalize it to
+    `[0.0667, 0.0667, 0.0667, 0.0667, 0.0667, 0.1333, 0.1333, 0.1333, 0.1333, 0.1333]`
+    """
+    r = scale_range(frames, 0, len(weights) - 0.1)
+    val = [weights[int(r[x])] for x in range(frames)]
+
+    return normalize(val)
+
+
+def _warn_bound(bound: tuple, func: str):
+    if len(bound) < 2:
+        raise ValueError(f"{func}: bound must be a tuple of length 2, got {bound}")
+    elif len(bound) > 2:
+        warnings.warn(f"{func}: bound was given as a tuple of length {len(bound)}, only the first two values will be used",
+               RuntimeWarning)

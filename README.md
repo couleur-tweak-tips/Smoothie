@@ -1,47 +1,89 @@
+<p align="center">
+    <img alt="Smoothie" src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/320/twitter/248/bubble-tea_1f9cb.png" width="100" />
+  </a>
+</p>
+<h1 align="center">
+  Smoothie
+</h1>
 
-# 🧋 Smoothie [WIP]
+<h4 align="center">
+  <a href="https://github.com/couleur-tweak-tips/Smoothie/wiki">Docs</a> |
+  <a href="https://www.youtube.com/playlist?list=PLrsLsEZL_o4M_yTqZGwN5cM5ZxJTqkWkZ">Demo Playlist</a> |
+  <a href="https://ctt.cx">Website</a>
+</h4>
 
-Apply motion-blur on your gameplay content with frame interpolation, artifact masking and frame blending.
-> It is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritten in Python with a focus on ease of use and integration in your existing routine.
+<p align="center">
+Apply motion-blur efficiently on gameplay footage, however you want it.
+</p>
+<p align="center">
+    <a href="https://discord.com/invite/aPVMJy78Pa">
+        <img src="https://img.shields.io/discord/774315187183288411?color=7389D8&labelColor=6A7EC2&label=Discord&logo=discord&logoColor=white alt="Discord" />
+    </a>
+    <a href="https://github.com/couleur-tweak-tips/TweakList/blob/master/LICENSE">
+        <img src="https://img.shields.io/github/license/couleur-tweak-tips/TweakList.svg" alt="License" />
+    </a>
+</p>
+
+Smoothie is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritten in Python with a focus on efficiency (never gets in your way) and integration in your existing content creation routine.
 
 
 ### 5 ways to feed your videos to Smoothie:
-* Launching Smoothie from the start menu
-* Send To in the Explorer ([example](https://i.imgur.com/MnyYgfr.mp4))
-* `sm` on the command line, see it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki)
-* [MPV Trimmer](https://files.catbox.moe/t45q4k.mp4)
-* One-button script to render and replace videos in your NLE `WIP`
+* Launching Smoothie from the start menu (OpenFile dialog)
+* "Send To" option in Explorer ([example](https://i.imgur.com/MnyYgfr.mp4))
+* `sm` on the command line, see [docs](https://github.com/couleur-tweak-tips/Smoothie/wiki/%F0%9F%8E%B9-Using-Smoothie-from-the-command-line)
+* Export on MPV via my sister project [suckless-cut](https://github.com/couleur-tweak-tips/suckless-cut)
+* One-button script to render and replace videos in your video-editor `WIP for VEGAS Pro`
+
 
 ### Differences compared to blur:
 ```diff
-- Preview (Set container to .MKV and play unrendered video)
-+ Static YAML config
-+ Unique config instead of per folder (set up like this per default, see --config in CLI)
-+ Cross-platform (tested on Arch, Ubuntu & Windows)
-+ Completely portable and automated installation via Scoop
-+ FlowBlur (RSMB-like motion blur) with artifact masking (see /masks/)
-+ MPV Trimmer ingration (great alternative to LosslessCut)
+- No "color grading" option (contrast, brightness..) feel free to PR
+- No drag and drop menu (because conhost does not support)
++ Instead there's a file picker, which support whole folders
++ Static YAML config (instead of per folder)
++ FlowBlur option (RSMB-like motion blur) with artifact masking (see /masks/)
++ `-override` argument to change on the fly some recipe setting(s), useful in shortcuts!!
++ Linux: tested on Arch & Ubuntu, should work where Python & VapourSynth do
++ Windows: Completely portable and automated installation via Scoop
 ```
 
 ## Installation
 
-To install Smoothie and its dependencies for Windows, run this install script command anywhere:
+To automatically install Smoothie and its [dependencies](https://github.com/couleur-tweak-tips/Smoothie/wiki/%F0%9F%93%A6-Bundling-Smoothie-yourself) for Windows, run this command in PowerShell:
 
 ```powershell
-powershell -noe iex(irm tl.ctt.cx);Get Smoothie
+iex(irm tl.ctt.cx); Get Smoothie
 ```
-🐧 See for Linux [here](https://github.com/couleur-tweak-tips/Smoothie/wiki)
+[This](https://github.com/couleur-tweak-tips/TweakList/blob/master/modules/Installers/Get.ps1#L71) will do the following for you:
 
-## Configuring Smoothie
+* Set up Scoop, a portable package manager
+* Install FFmpeg if needed
+* Install Smoothie, add it to PATH, set up shortcuts and prompt you for misc plugins
 
-The default recipe can be opened from the Run dialog (Windows+R):
+If you don't want to run the installation script can also grab the latest portable zip from the repo's releases [here](https://github.com/couleur-tweak-tips/Smoothie/releases) (be aware you'll need to set up shortcuts yourself ⚠)
+
+🐧 See installation instructions for Linux [here](https://github.com/couleur-tweak-tips/Smoothie/wiki)
+
+### Uninstalling Scoop & Smoothie
+
+You should find Scoop (per default) in your `%USERPROFILE%` folder, if you want to delete Smoothie specificly it's in `... \Scoop\apps\smoothie`
+
+
+## Configuring Smoothie (recipe 😋)
+
+If installed with Scoop, the main (default) recipe can be opened from the Run dialog (Windows+R):
+
 ![](https://i.imgur.com/P337omt.png)
 
+
+You can learn what each setting does on it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki/Configuring-Smoothie-(recipe))
 
 <details>
 <summary> It's default recipe looks like so (comments are only present here) </summary>
 
-> Learn what each setting does on it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki/Configuring-Smoothie-(recipe))
+## Recipe example
+
+
 
 ```yaml
 interpolation: # Tries to guess frames in between existing ones to increase FPS
@@ -59,15 +101,15 @@ frame blending: # Converts high FPS footage (e.g 240, 960) to a lower frame rate
   weighting: equal # How each blur frame's opacity is decided (default is every one of them is equal)
 
 encoding: 
-  process: ffmpeg # ffmpeg binary name, useful to tune if you got different compiled versions
+  process: ffmpeg # ffmpeg's executable path
   args: H264 CPU # You can replace with with your own -c:v/-vf FFmpeg filters
 
 misc:
-  mpv bin: mpv # mpv binary name, same deal as FFmpeg
+  mpv bin: mpv # mpv executable path, same deal as FFmpeg
   stay on top: true # if you don't want the progress bar always on top
-  verbose: false # Can also be turned on with -verbose or -v via the CLI
+  verbose: false # Can also be turned on with -verbose/-v on the CLI
   ding after: 1 # Minimum numbers of videos queued before it plays a little notification sound when all video(s) finished rendering
-  folder: # Override all output videos paths to a specific folder
+  folder: # Redirect all output videos to a specific folder
   deduplication: y # Frame deduplication (useful if you have a tiny little bit of encoding lag)
   container: .MP4 # Set this to .MKV to be able to watch the video before it even finishes rendering! (You'll need to remux them to .MP4 after to use the video in specific applications)
   prefix: # Empty by default, you can make your apex.mp4 be outputted as SM-apex.mp4
