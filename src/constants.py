@@ -50,3 +50,6 @@ EncPresets = { # Same setup as TweakList's Get-EncArgs
         'CPU':         "libx265 -preset slow -x265-params aq-mode=3 -crf 18 -pix_fmt yuv420p10le"
     }
 }
+
+ISLINUX = ossystem() == 'Linux'
+ISWIN   = ossystem() == 'Windows'
