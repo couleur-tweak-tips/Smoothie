@@ -13,7 +13,7 @@ add_arg("-input", "-i",
         type=str)
 
 add_arg("-output", "-o",
-        help=" specify output video path(s)",
+        help=" specify output video path",
         action="store",
         nargs="+",
         metavar='PATH',
