@@ -1,16 +1,17 @@
 interpolation:
-  enabled: yes
-  fps: 720
+  enabled: y
+  fps: 960
   speed: medium
-  tuning: weak
-  algorithm: 23
-  use gpu: no
+  tuning: smooth
+  algorithm: 13
+  use gpu: yes
+  mask:
 
 frame blending:
   enabled: yes
   fps: 60
-  intensity: 1.0
-  weighting: equal
+  intensity: 1.3
+  weighting: gaussian_sym
 
 flowblur:
   enabled: no
@@ -38,6 +39,12 @@ misc:
   prefix: 
   suffix: fruits
   dedupthreshold: 0
+
+console params:
+  ontop: yes
+  borderless: yes
+  width: 900
+  height: 35
 
 timescale:
   in: 1.0

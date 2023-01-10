@@ -115,8 +115,9 @@ def buildcmd(args) -> list: # Builds up a command from all recipe
 
 	rc['encoding']['args'] = parse_ez_enc_args(args=rc['encoding']['args'], rc=rc)
 
-	if args.cui and rc['misc']['stay on top'] in yes:
-		win32lib.setSmTop(False) # Move and resize terminal to the top left of the screen
+	if args.cui:
+		params = getWinParams(recipe=rc['console params'], debug=False)
+		win32lib.setSMWndParams(**params)
 
 
 	if args.override:

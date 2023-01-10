@@ -1,11 +1,16 @@
 # Provides bindings to [lib.dll].
 
-from ctypes import CDLL, c_char_p, c_bool
+from ctypes import CDLL, c_char_p, c_bool, c_int
 from os.path import dirname
 
 # Absolute paths are required to load the dll file.
 dll = CDLL(f"{dirname(__file__)}/lib.dll")
 
+# Constants
+TOPLEFT = 1
+BOTTOMLEFT = 2
+TOPRIGHT = 3
+BOTTOMRIGHT = 4
 
 def openFileDialog(title: str = "Open", filters: str = "All Files (*.*)|*.*", dir: str = ".") -> list[str]:
     # Title -> Title of the file dialog.
@@ -18,14 +23,8 @@ def openFileDialog(title: str = "Open", filters: str = "All Files (*.*)|*.*", di
     return ofd(title.encode(), filters.encode(), dir.encode()).decode().splitlines()
 
 
-def setSmTop(debug: bool):
+def setSMWndParams(ontop: bool, borderless: bool, width: int, height: int, pos: int = 1):
     # Puts any foreground window on top of all other windows.
-    swot = dll.setSmTop
-    swot.argtypes = [c_bool]
-    swot(debug)
-    
-def setSmDebug(debug: bool):
-    # Puts any foreground window on top of all other windows.
-    swot = dll.setSmDebug
-    swot.argtypes = [c_bool]
-    swot(debug)
+    sswp = dll.setSMWndParams
+    sswp.argtypes = [c_bool, c_bool, c_int, c_int]
+    sswp(ontop, borderless, width, height, pos)

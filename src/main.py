@@ -66,7 +66,9 @@ Arguments passed to Smoothie:\n
                 exit()
                 
         if (log): # Only returns logs if it throws
-            if args.cui: win32lib.setSmDebug(False)
+            if args.cui and constants.ISWIN:
+                params = getWinParams(recipe=cmd['recipe']['console params'], debug=True)
+                win32lib.setSMWndParams(**params)
             colors.printc("Oops! $LRED@WHITESmoothie crashed&RESET@LRED, here's a bunch of info you can look into and share to help us debug:")
             print(context)
             for error in log:

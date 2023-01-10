@@ -6,6 +6,28 @@ import os
 import json
 import subprocess
 
+# Bool aliases
+yes = ['on','True','true','yes','y','1', True]
+no = ['off','False','false','no','n','0','null','','none',None, False]
+
+
+def getWinParams(recipe, debug: bool) -> dict:
+    if debug:
+        return {
+          'ontop':      False,
+          'borderless': False,
+          'width':  1000,
+          'height': 500,
+        }
+
+    else:
+        return {
+          'ontop':      recipe['ontop'] in yes,
+          'borderless': recipe['borderless'] in yes,
+          'width': int(recipe['width']),
+          'height': int(recipe['height']),
+      }
+
 def exitSm(errorlevel, args) -> None: # Do not "instantly" close the terminal
 	if args.cui:
 		none = input("Press enter to exit")
@@ -64,9 +86,6 @@ def check_os():
 def pause():
     getpass.getpass('Press enter to continue..')
 
-# Bool aliases
-yes = ['on','True','true','yes','y','1', True]
-no = ['off','False','false','no','n','0','null','','none',None, False]
 
 def get_sec(timecode):
     spare = 0
