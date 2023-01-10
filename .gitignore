@@ -1,16 +1,30 @@
-/build/
-
-# binary / os files
-*.ffindex
-desktop.ini
-__pycache__
-/models/*
+NLEing.md
+/mpv/
 *.dll
 *.exe
-
-
-# the rest is docusaurus stuff
-
+*.ffindex
+models/
+/src/olds/*
+.vscode/
+.vspreview/
+build/*
+hamilton.vpy
+carlito.py
+average.py
+resampler.vpy
+build.cmd
+tmpbuild/*
+masks/*.pdn
+fw.vpy
+desktop.ini
+*.bak
+*.pyc
+*.dist
+*.exe
+ship.ps1
+aech.png
+reaver.png
+stan.png
 
 node_modules
 # Dependencies
