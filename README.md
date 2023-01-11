@@ -37,14 +37,14 @@ Smoothie is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritt
 
 ### Differences compared to blur:
 
-- [x] No "color grading" option (contrast, brightness..) feel free to PR
-- [x] No drag and drop menu (because conhost does not support)
-- [ ] Instead there's a file picker, which support whole folders
-- [ ] Static YAML config (instead of per folder)
-- [ ] FlowBlur option (RSMB-like motion blur) with artifact masking (see /masks/)
-- [ ] `-override` argument to change on the fly some recipe setting(s), useful in shortcuts!!
-- [ ] Linux: tested on Arch & Ubuntu, should work where Python & VapourSynth do
-- [ ] Windows: Completely portable and automated installation via Scoop
+- [ ] No "color grading" option (contrast, brightness..) feel free to PR
+- [ ] No drag and drop menu (because conhost does not support)
+- [x] Instead there's a file picker, which support whole folders
+- [x] Static YAML config (instead of per folder)
+- [x] FlowBlur option (RSMB-like motion blur) with artifact masking (see /masks/)
+- [x] `-override` argument to change on the fly some recipe setting(s), useful in shortcuts!!
+- [x] Linux: tested on Arch & Ubuntu, should work where Python & VapourSynth do
+- [x] Windows: Completely portable and automated installation via Scoop
 
 
 ## Installation
