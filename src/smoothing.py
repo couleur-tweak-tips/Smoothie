@@ -207,7 +207,7 @@ def Smoothing (video, rc):
 
 		video = core.rife.RIFE(
 			video,
-			multiplier=str(pi['factor']).strip('x'),
+			factor_num=str(pi['factor']).strip('x'),
 			model_path=model_path,
 			gpu_id=0, gpu_thread=1, tta=False, uhd=False, sc=True
 			)
