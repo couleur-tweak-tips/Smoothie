@@ -1,4 +1,7 @@
 NLEing.md
+.idea/
+lastargs.txt
+last_args.txt
 /mpv/
 *.dll
 *.exe
