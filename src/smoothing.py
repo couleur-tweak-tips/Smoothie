@@ -224,11 +224,7 @@ def Smoothing (video, rc):
 		video = vs.core.resize.Bicubic(video, format=vs.YUV420P8, matrix_s=cMatrix)
 		#verb("the fuck is" + cMatrix)
 
-
 	if str((ip := rc['interpolation'])['enabled']).lower() in yes:
-
-		if float(video.fps) > ip['fps']:
-			raise ValueError("Input FPS greater than specified interpolation FPS")
 
 		if 'mask' in ip.keys():
 			if ip['mask'] not in no:
@@ -240,6 +236,9 @@ def Smoothing (video, rc):
 			interp_fps = int(video.fps * int((ip['fps']).replace('x','')))
 		else:
 			interp_fps = int(ip['fps'])
+		
+		if float(video.fps) > interp_fps:
+			raise ValueError("Input FPS greater than specified interpolation FPS")
 
 		video = havsfunc.InterFrame(
 			video,
