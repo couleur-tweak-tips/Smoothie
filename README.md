@@ -61,13 +61,13 @@ iex(irm tl.ctt.cx); Get Smoothie
 * Install FFmpeg and add it to PATH if needed
 * Install Smoothie, add it to PATH (`sm`), set up shortcuts and prompt you for misc plugins
 
-If you don't want to run the installation script can also grab the latest portable zip from the repo's releases [here](https://github.com/couleur-tweak-tips/Smoothie/releases) (⚠ be aware you'll need to set up shortcuts yourself)
+If you don't want to run the installation script can also grab the latest portable zip from the repo's releases [here](https://github.com/couleur-tweak-tips/Smoothie/releases) (though be aware you'll need to set up shortcuts yourself)
 
 🐧 See installation instructions for Linux [here](https://github.com/couleur-tweak-tips/Smoothie/wiki)
 
 ### Uninstalling Scoop & Smoothie
 
-You should find Scoop (per default) in your `%USERPROFILE%` folder, if you want to delete Smoothie specificly it's in `... \Scoop\apps\smoothie`
+You should find Scoop (per default) in your `%USERPROFILE%` folder, if you want to delete Smoothie specificly it's in `...\scoop\apps\smoothie`
 
 
 ## Configuring Smoothie (recipe 😋)
@@ -79,12 +79,9 @@ If installed with Scoop, the main (default) recipe can be opened from the Run di
 
 You can learn what each setting does on it's [wiki page](https://github.com/couleur-tweak-tips/Smoothie/wiki/Configuring-Smoothie-(recipe))
 
-<details>
-<summary> It's default recipe looks like so (comments are only present here) </summary>
-
-## Recipe example
 
 
+## The default recipe
 
 ```yaml
 interpolation: # Tries to guess frames in between existing ones to increase FPS
@@ -121,4 +118,3 @@ timescale: # Set the speed in/out, I like out @ 1.03 to speed a liiittle bit to 
   in: 1
   out: 1
 ```
-</details>
