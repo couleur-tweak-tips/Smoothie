@@ -494,7 +494,7 @@ Type of videos: {type(videos)}
 		if 'ffmpeg' in cmd['ff'] or cmd['ff'].startswith('mpv'):      
 
 			# This will force the output video's color range to be Full
-			range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{filepath}"', stdout=PIPE, stderr=PIPE, universal_newlines=True)
+			range_proc = run(f'ffprobe -v error -show_entries stream=color_range -of default=noprint_wrappers=1:nokey=1 "{filepath}"', stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
 			if range_proc.stdout == 'pc\n':
 				if '-vf ' in cmd['ff']:
 					cmd['ff'] = cmd['ff'].replace('-vf ','-vf scale=in_range=full:out_range=limited,') # Very clever video filters appending
