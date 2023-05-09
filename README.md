@@ -1,3 +1,6 @@
+# **Warning**
+#
+# This repository is dormant for now. I am not content with using Python as a base for Smoothie's logic flow, it is being written again in Rust [here](https://github.com/couleur-tweak-tips/smoothie-rs), see the bottom of it's README for details about the future of the two repositories
 
 <h1 align="center">
     <img alt="Smoothie" src="https://i.imgur.com/K20ymPM.png" width="100" />
