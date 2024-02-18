@@ -1,6 +1,12 @@
-> **Warning**
->
-> This repository is dormant for now. I am not content with using Python as a base for Smoothie's logic flow, it is being written again in Rust [here](https://github.com/couleur-tweak-tips/smoothie-rs), see the bottom of it's README for details about the future of the two repositories
+# ⚠ Smoothie'-py' is <u>deprecated</u> in favor of [smoothie-rs](https://github.com/couleur-tweak-tips/smoothie-rs)
+
+Since early 2023, the original Python version of Smoothie is deprecated.
+
+It is now actively developed in Rust [here](https://github.com/couleur-tweak-tips/smoothie-rs) and documented [there](https://ctt.cx/smoothie).
+
+The rest of the old README can be found below.
+
+---
 
 <h1 align="center">
     <img alt="Smoothie" src="https://i.imgur.com/K20ymPM.png" width="100" />
@@ -53,9 +59,13 @@ Smoothie is a cross-platform fork of [blur](https://github.com/f0e/blur) rewritt
 
 ## Installation
 
+> [!CAUTION]
+> <u>For the people who read diagonally: [A very important reminder is specified at the top](#-smoothie-py-is-deprecated-in-favor-of-smoothie-rs)</u>
+
 To automatically install Smoothie and its [dependencies](https://github.com/couleur-tweak-tips/Smoothie/wiki/%F0%9F%93%A6-Bundling-Smoothie-yourself) for Windows, run this command in PowerShell:
 
 ```powershell
+# IMPORTANT REMINDER: This now installs smoothie-rs, see releases if you REALLY want an old version (contact me if a feature of smoothie regressed)
 iex(irm tl.ctt.cx); Get Smoothie
 ```
 [This](https://github.com/couleur-tweak-tips/TweakList/blob/master/modules/Installers/Get.ps1#L71) will do the following for you:
